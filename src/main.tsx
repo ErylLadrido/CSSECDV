@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import './index.css'
 
 // Routes
-import App from './App.tsx'
+import App from './pages/UserPanel.tsx'
 import Login from './pages/Login.tsx';
 import Signup from './pages/Signup.tsx';
 import AdminPanel from './pages/AdminPanel.tsx';
