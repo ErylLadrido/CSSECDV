@@ -6,7 +6,7 @@ type Props = {}
 export default function AdminPanel({}: Props) {
     return (
         <div className="min-h-screen bg-gray-50">
-            <Navbar username="Admin" />
+            <Navbar username="Admin" isLoggedIn={true} />
 
             <div className="p-6">
                 <h2 className="text-2xl font-semibold mb-4">Admin Panel</h2>
