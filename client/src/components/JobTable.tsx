@@ -1,20 +1,20 @@
 import React from 'react'
 
 type Props = {
-    jobTitle: string,
-    companyName: string,
+    title: string,
+    company: string,
     location: string,
     status: string
 }
 
-export default function JobTable({ jobTitle, companyName, location, status }: Props) {
+export default function JobTable({ title, company, location, status }: Props) {
     return (
-        <tr>
+        <>
             <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">{jobTitle}</div>
+                <div className="text-sm font-medium text-gray-900">{title}</div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">{companyName}</div>
+                <div className="text-sm text-gray-900">{company}</div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-900">{location}</div>
@@ -24,6 +24,6 @@ export default function JobTable({ jobTitle, companyName, location, status }: Pr
                     {status}
                 </span>
             </td>
-        </tr>
+        </>
     )
 }
