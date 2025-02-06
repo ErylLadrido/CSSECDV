@@ -1,6 +1,6 @@
 import React from 'react'
 import Navbar from '../components/Navbar'
-import JobTable from '../components/JobTable'
+import JobTable from '../components/UserTable'
 
 type Props = {}
 
