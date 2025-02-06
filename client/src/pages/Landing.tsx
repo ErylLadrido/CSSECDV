@@ -1,33 +1,13 @@
 import React from 'react'
-import { APP_NAME } from '../constants'
+import Navbar from '../components/Navbar'
 
 type Props = {}
 
 export default function Landing({}: Props) {
     return (
         <div className="min-h-screen flex flex-col bg-gray-100">
-            {/* Navigation Bar - Temporary */}
-            <nav className="bg-white shadow-md w-full">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="flex justify-between items-center py-4">
-                        <div className="text-lg font-bold text-gray-800">{APP_NAME}</div>
-                        <div className="flex space-x-4">
-                            <button
-                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm"
-                                type="button"
-                            >
-                                Log In
-                            </button>
-                            <button
-                                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm"
-                                type="button"
-                            >
-                                Sign Up
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            {/* Navigation Bar*/}
+            <Navbar username="John Doe" isLoggedIn={false} />
 
             {/* Main Content */}
             <div className="flex-grow flex items-center justify-center">
@@ -38,7 +18,7 @@ export default function Landing({}: Props) {
                         Keeping track of your job applications can be overwhelming. Jobby simplifies the process by helping you manage applications, deadlines, and interview schedules all in one place. Stay organized and stay ahead in your job search with our easy-to-use tracking system.
                     </p>
                     <button
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        className="text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline get-started-button"
                         type="button"
                     >
                         Get Started

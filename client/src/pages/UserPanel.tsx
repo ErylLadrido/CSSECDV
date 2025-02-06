@@ -14,7 +14,7 @@ export default function UserPanel({}: Props) {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Navbar username="John Doe" />
+            <Navbar username="John Doe" isLoggedIn={true} />
 
             <div className="p-6">
                 <h2 className="text-2xl font-semibold mb-4">Job Applications</h2>

@@ -15,6 +15,35 @@ html{
     min-height: 100%;
 }
 
+.login-button {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    background-color: var(--background-color);
+}
+
+.login-button:hover {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+}
+
+.signup-button {
+    border: 2px solid var(--primary-color);
+    background-color: var(--primary-color);
+}
+
+.signup-button:hover {
+    background-color: var(--background-color);
+    color: var(--primary-color);
+}
+
+.get-started-button {
+    background-color: var(--primary-color);
+}
+
+.get-started-button:hover {
+    background-color: var(--secondary-color);
+}
+
 .drop-down-profile-button {
     background-color: var(--primary-color);
 }
