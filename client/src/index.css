@@ -2,7 +2,7 @@
 
 :root {
     --primary-color:#1E2345;        /* Dark Blue */
-    --secondary-color: #64748B;     /* Muted Blue/Grayish Blue */
+    --secondary-color: #29377A;     /* Light Blue */
     --accent-color: #FACC15;        /* Yellow */
     --background-color: #F1F5F9;    /* Off White */
     --text-color: #0F172A;          /* Dark Gray */
@@ -33,17 +33,30 @@ html{
 
 .signup-button:hover {
     background-color: var(--background-color);
-    color: var(--primary-color);
+    color: var(--text-color);
 }
 
 .get-started-button {
-    background-color: var(--primary-color);
+    background-color: var(--secondary-color);
 }
 
-.get-started-button:hover {
-    background-color: var(--secondary-color);
+.active-button:hover {
+    background-color: var(--primary-color);
 }
 
 .drop-down-profile-button {
     background-color: var(--primary-color);
+}
+
+/* UserProfile */
+.pfp-bg-hover:hover {
+    border: 2px solid var(--secondary-color);
+}
+
+.save-profile-button {
+    background-color: var(--secondary-color);
+}
+
+.change-password-button {
+    background-color: var(--accent-color);
 }
