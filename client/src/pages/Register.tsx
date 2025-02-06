@@ -1,8 +1,62 @@
 import React from 'react'
+import axios from 'axios'
+import { useState } from 'react'
 
 type Props = {}
 
 export default function Register({}: Props) {
+    const [lastName, setLastName] = useState("");
+    const [firstName, setFirstname] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+
+    const debug = () => {
+        console.log(lastName)
+        console.log(firstName)
+        console.log(email)
+        console.log(password)
+        console.log(phoneNumber)
+    }
+
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if(event.target.files){
+            setProfilePhoto(event.target.files[0])
+        }
+    }
+    
+    const signUp = () => {
+        const formData = new FormData();
+    
+        // Append form data
+        formData.append('lastName', lastName);
+        formData.append('firstName', firstName);
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('phoneNumber', phoneNumber);
+
+        // Check if profilePhoto is not null before appending it to the formData
+        if (profilePhoto) {
+            formData.append('profilePhoto', profilePhoto);
+        } else {
+            console.log('No profile photo selected');
+        }
+    
+        // Send the request with the correct headers
+        axios.post('http://localhost:8080/signup', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',  // This tells the server the request contains multipart data
+            }
+        })
+        .then(function (response) {
+            console.log(response);
+        })
+        .catch(function (error) {
+            console.log(error);
+        })
+    }
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
@@ -20,6 +74,8 @@ export default function Register({}: Props) {
                                 id="lastName"
                                 type="text"
                                 placeholder="Last Name"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
                             />
                         </div>
                         <div>
@@ -31,6 +87,8 @@ export default function Register({}: Props) {
                                 id="firstName"
                                 type="text"
                                 placeholder="First Name"
+                                value={firstName}
+                                onChange={(e) => setFirstname(e.target.value)}
                             />
                         </div>
                     </div>
@@ -45,6 +103,8 @@ export default function Register({}: Props) {
                             id="email"
                             type="email"
                             placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                         />
                     </div>
 
@@ -58,6 +118,8 @@ export default function Register({}: Props) {
                             id="password"
                             type="password"
                             placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
 
@@ -71,6 +133,8 @@ export default function Register({}: Props) {
                             id="phoneNumber"
                             type="tel"
                             placeholder="Phone Number"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
                         />
                     </div>
 
@@ -83,6 +147,7 @@ export default function Register({}: Props) {
                             className="border rounded w-full py-2 px-3 text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-white file:bg-blue-500 hover:file:bg-blue-700 cursor-pointer"
                             id="profilePhoto"
                             type="file"
+                            onChange={handleImageChange}
                         />
                     </div>
 
@@ -90,6 +155,7 @@ export default function Register({}: Props) {
                     <button
                         className="w-full text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 transition register-button"
                         type="button"
+                        onClick={signUp}
                     >
                         Sign Up
                     </button>
