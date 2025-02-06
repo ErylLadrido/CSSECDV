@@ -7,12 +7,14 @@ import (
 	"mime/multipart"
 	"net/http"
 	"regexp"
-	"strings"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	_ "image/jpeg" // Register JPEG decoder
+    _ "image/png"  // Register PNG decoder
+    _ "image/gif"  // Register GIF decoder
+	_ "golang.org/x/image/webp" // Add WebP support
 )
 
 // Global validator instance
@@ -57,33 +59,40 @@ func customValidationErrors(err error) gin.H {
 }
 
 func validateProfilePhoto(file *multipart.FileHeader) error {
-    // Check file size (example: limit to 5MB)
-    const maxFileSize = 32 * 1024 * 1024 // Max file size is 32MB
+    const maxFileSize = 5 * 1024 * 1024 // 5MB
     if file.Size > maxFileSize {
-        return fmt.Errorf("profile photo is too large. Maximum size is 32MB")
+        return fmt.Errorf("profile photo is too large. Maximum size is 5MB")
     }
 
-    // Check MIME type (only allow image files)
-    mimeType := file.Header.Get("Content-Type")
-    if !strings.HasPrefix(mimeType, "image/") {
-        return fmt.Errorf("invalid file type. Only image files are allowed")
-    }
-
-    // Open the file to check if it's an actual image
     f, err := file.Open()
     if err != nil {
         return fmt.Errorf("could not open file: %v", err)
     }
     defer f.Close()
 
-    // Try to decode the image
-    _, _, err = image.Decode(f)
+    _, format, err := image.Decode(f)
     if err != nil {
-        return fmt.Errorf("the uploaded file is not a valid image")
+        return fmt.Errorf("invalid image format: %v", err)
+    }
+
+    // Adjust based on supported decoders
+    validFormats := []string{"jpeg", "png", "gif", "bmp"}
+    if !contains(validFormats, format) {
+        return fmt.Errorf("unsupported image format: %s", format)
     }
 
     return nil
 }
+
+func contains(arr []string, item string) bool {
+    for _, a := range arr {
+        if a == item {
+            return true
+        }
+    }
+    return false
+}
+
 
 func signUpHandler(c *gin.Context) {
     var signupData SignupData
