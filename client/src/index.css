@@ -53,10 +53,11 @@ html{
     border: 2px solid var(--secondary-color);
 }
 
-.save-profile-button {
+.save-profile-button{
     background-color: var(--secondary-color);
 }
 
 .change-password-button {
     background-color: var(--accent-color);
 }
+
