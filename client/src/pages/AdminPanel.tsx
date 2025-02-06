@@ -1,7 +1,9 @@
 import React from 'react'
 import Navbar from '../components/Navbar'
 
-function AdminPanel() {
+type Props = {}
+
+export default function AdminPanel({}: Props) {
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar username="Admin" />
@@ -48,5 +50,3 @@ function AdminPanel() {
         </div>
     )
 }
-
-export default AdminPanel
