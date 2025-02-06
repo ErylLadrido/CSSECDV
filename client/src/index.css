@@ -26,17 +26,17 @@ html{
     color: var(--background-color);
 }
 
-.signup-button {
+.register-button {
     border: 2px solid var(--primary-color);
     background-color: var(--primary-color);
 }
 
-.signup-button:hover {
+.register-button:hover {
     background-color: var(--background-color);
     color: var(--text-color);
 }
 
-.get-started-button {
+.get-started-button{
     background-color: var(--secondary-color);
 }
 

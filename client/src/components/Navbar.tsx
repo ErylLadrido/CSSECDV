@@ -55,7 +55,7 @@ export default function Navbar({ username, isLoggedIn }: Props) {
                         {/* Features
                         FAQs */}
                         <a href="/login" className="font-bold py-2 px-4 rounded login-button">Login</a>
-                        <a href="/register" className="text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline signup-button">Register</a>
+                        <a href="/register" className="text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline register-button">Register</a>
                     </div>
                 )}
             </div>
