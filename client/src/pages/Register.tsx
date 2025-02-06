@@ -12,14 +12,6 @@ export default function Register({}: Props) {
     const [phoneNumber, setPhoneNumber] = useState("");
     const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
 
-    const debug = () => {
-        console.log(lastName)
-        console.log(firstName)
-        console.log(email)
-        console.log(password)
-        console.log(phoneNumber)
-    }
-
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if(event.target.files){
             setProfilePhoto(event.target.files[0])
@@ -51,10 +43,44 @@ export default function Register({}: Props) {
         })
         .then(function (response) {
             console.log(response);
+            alert(response.data.message);
         })
         .catch(function (error) {
             console.log(error);
-        })
+
+    // Check if error response exists
+    if (error.response && error.response.data) {
+        console.log(error);
+
+        // Check if error.response exists
+        if (error.response && error.response.data) {
+            let errorMessage = '';
+    
+            // Case 1: If there is an image validation error (like file type or size)
+            if (error.response.data.error && typeof error.response.data.error === 'string') {
+                errorMessage = error.response.data.error; // Direct error message for image
+            } 
+            // Case 2: General validation errors (e.g., missing fields, email format, etc.)
+            else if (typeof error.response.data.error === 'object') {
+                // Loop through the error object and format key-value pairs
+                for (const [key, value] of Object.entries(error.response.data.error || {})) {
+                    errorMessage += `${key}: ${value}\n`;
+                }
+            }
+            
+            // If no error message was set by the above conditions, provide a fallback message
+            if (!errorMessage) {
+                errorMessage = "An unexpected error occurred.";
+            }
+    
+            alert(errorMessage);  // Show the error message in the alert box
+        } else {
+            alert("An unexpected error occurred.");
+        }
+    } else {
+        alert("An unexpected error occurred.");
+    }
+        });
     }
 
     return (
