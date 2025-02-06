@@ -43,8 +43,8 @@ export default function Navbar({ username, isLoggedIn }: Props) {
                 
                             {dropdownOpen && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2">
-                                    <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">Profile</a>
-                                    <a href="/tutorials" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">Tutorials</a>
+                                    <a href="/UserProfile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">Profile</a>
+                                    {/* <a href="/tutorials" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">Tutorials</a> */}
                                     <a href="/logout" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">Logout</a>
                                 </div>
                             )}
