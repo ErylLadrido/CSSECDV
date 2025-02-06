@@ -1,9 +1,20 @@
 @import "tailwindcss";
 
-#root,
+:root {
+    --primary-color:#1E2345;        /* Dark Blue */
+    --secondary-color: #64748B;     /* Muted Blue/Grayish Blue */
+    --accent-color: #FACC15;        /* Yellow */
+    --background-color: #F1F5F9;    /* Off White */
+    --text-color: #0F172A;          /* Dark Gray */
+}
+
 body,
 html{
     margin: 0;
     padding: 0;
     min-height: 100%;
+}
+
+.drop-down-profile-button {
+    background-color: var(--primary-color);
 }
