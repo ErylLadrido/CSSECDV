@@ -1,12 +1,15 @@
 import React from 'react'
 import axios from 'axios'
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 
 type Props = {}
 
 export default function Login({}: Props) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+
+    let navigate = useNavigate()
 
     const login = (e: React.FormEvent) => {
         e.preventDefault(); // Prevent page reload
@@ -15,7 +18,18 @@ export default function Login({}: Props) {
             password: password
         })
         .then(function (response) {
-            alert(JSON.stringify(response.data)); // Show server response
+            alert(JSON.stringify(response.data.message)); // Show server response
+            
+            console.log(response.data.token);
+            
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('role', response.data.role)
+
+            if(response.data.role == "user")
+                navigate("/")
+            else if(response.data.role == "admin")
+                navigate("/admin")
+
         })
         .catch(function (error) {
             if (error.response) {

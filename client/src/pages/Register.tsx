@@ -1,6 +1,7 @@
 import React from 'react'
 import axios from 'axios'
 import { useState } from 'react'
+import { Navigate, useNavigate } from 'react-router';
 
 type Props = {}
 
@@ -11,6 +12,8 @@ export default function Register({}: Props) {
     const [password, setPassword] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
     const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+    
+    let navigate = useNavigate();
 
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if(event.target.files){
@@ -44,6 +47,8 @@ export default function Register({}: Props) {
         .then(function (response) {
             console.log(response);
             alert(response.data.message);
+            navigate("/login")
+            
         })
         .catch(function (error) {
             console.log(error);

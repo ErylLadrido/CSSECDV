@@ -1,9 +1,22 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import Navbar from '../components/Navbar'
+import axios from 'axios'
 
 type Props = {}
 
 export default function AdminPanel({}: Props) {
+
+    useEffect(() => {
+        
+        axios.get('http://localhost:8080/admin')
+            .then(function(response) {
+                alert(response)
+            })
+            .catch(function(error) {
+                alert(error)
+            })
+    }, [])
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar username="Admin" isLoggedIn={true} />

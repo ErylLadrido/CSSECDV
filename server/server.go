@@ -6,9 +6,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"image"
-	_ "image/gif"  // Register GIF decoder
-	_ "image/jpeg" // Register JPEG decoder
-	_ "image/png"  // Register PNG decoder
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -21,10 +21,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/image/webp" // Add WebP support
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Global validator instance
@@ -32,13 +33,13 @@ var validate *validator.Validate
 
 // SignupData struct for the signup request
 type SignupData struct {
-	LastName      string                `form:"lastName" binding:"required"`
-	FirstName     string                `form:"firstName" binding:"required"`
-	Email         string                `form:"email" binding:"required,email"`
-	Password      string                `form:"password" binding:"required,min=8"`
-	PhoneNumber   string                `form:"phoneNumber" binding:"required,phone"`
-	ProfilePhoto  *multipart.FileHeader `form:"profilePhoto"`
-	Role          string                `form:"role"` // New field: role
+	LastName     string                `form:"lastName" binding:"required"`
+	FirstName    string                `form:"firstName" binding:"required"`
+	Email        string                `form:"email" binding:"required,email"`
+	Password     string                `form:"password" binding:"required,min=8"`
+	PhoneNumber  string                `form:"phoneNumber" binding:"required,phone"`
+	ProfilePhoto *multipart.FileHeader `form:"profilePhoto"`
+	Role         string                `form:"role"` // New field: role
 }
 
 // LoginData struct for the login request
@@ -135,6 +136,7 @@ func contains(arr []string, item string) bool {
 
 // Database connection
 var db *sql.DB
+var jwtSecret = []byte(os.Getenv("JWT_SECRET_KEY")) // Ensure you have a JWT secret key in your environment variables
 
 func initDB() {
 	// Load environment variables from .env file
@@ -268,7 +270,7 @@ func signUpHandler(c *gin.Context) {
 // 		return
 // 	}
 
-// 	// Fetch the user's salt and password hash from the database
+// 	// Fetch the user's password hash and salt from the database
 // 	var (
 // 		passwordHash string
 // 		salt         string
@@ -285,16 +287,12 @@ func signUpHandler(c *gin.Context) {
 // 		return
 // 	}
 
-// 	// Hash the inputted password with the retrieved salt
-// 	hashedPassword, err := hashPassword(loginData.Password, salt)
-// 	if err != nil {
-// 		log.Println("Error hashing password:", err)
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-// 		return
-// 	}
+// 	// Combine the stored salt with the input password
+// 	saltedPassword := salt + loginData.Password
 
-// 	// Compare the hashed password with the stored password hash
-// 	if hashedPassword != passwordHash {
+// 	// Compare the salted password with the stored hash using bcrypt
+// 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(saltedPassword))
+// 	if err != nil {
 // 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 // 		return
 // 	}
@@ -304,59 +302,94 @@ func signUpHandler(c *gin.Context) {
 // 		"message": "Login successful",
 // 	})
 // }
+
 func loginHandler(c *gin.Context) {
-	var loginData LoginData
+    var loginData LoginData
 
-	// Bind the login request data
-	if err := c.ShouldBind(&loginData); err != nil {
-		c.JSON(http.StatusBadRequest, customValidationErrors(err))
-		return
-	}
+    // Bind the login request data
+    if err := c.ShouldBind(&loginData); err != nil {
+        c.JSON(http.StatusBadRequest, customValidationErrors(err))
+        return
+    }
 
-	// Fetch the user's salt and password hash from the database
-	var (
-		passwordHash string
-		salt         string
-	)
-	
-	query := `SELECT password_hash, salt FROM users WHERE email = ?`
-	err := db.QueryRow(query, loginData.Email).Scan(&passwordHash, &salt)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			// No user found with the provided email
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-		} else {
-			// Database error
-			log.Println("Error fetching user from database:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user data"})
-		}
-		return
-	}
+    // Fetch the user's password hash and salt from the database
+    var (
+        passwordHash string
+        salt         string
+        role         string
+    )
+    query := `SELECT password_hash, salt, role FROM users WHERE email = ?`
+    err := db.QueryRow(query, loginData.Email).Scan(&passwordHash, &salt, &role)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+        } else {
+            log.Println("Error fetching user from database:", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user data"})
+        }
+        return
+    }
 
-	// Concatenate the salt with the provided password
-	passwordWithSalt := salt + loginData.Password
+    // Combine the stored salt with the input password
+    saltedPassword := salt + loginData.Password
 
-	// Hash the concatenated string (salt + password)
-	hashedPassword, err := hashPassword(passwordWithSalt, salt)
-	if err != nil {
-		log.Println("Error hashing password:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
-	}
+    // Compare the salted password with the stored hash using bcrypt
+    err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(saltedPassword))
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+        return
+    }
 
-	// Compare the newly hashed password with the stored password hash
-	if hashedPassword != passwordHash {
-		// Passwords don't match
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
-		return
-	}
+    // Generate a JWT token upon successful login
+    claims := jwt.MapClaims{
+        "email": loginData.Email,
+        "role":  role, // Store role for access control
+        "exp":   time.Now().Add(time.Hour * 24).Unix(), // Token expiration time (24 hours)
+    }
 
-	// Login successful
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
-	})
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    tokenString, err := token.SignedString(jwtSecret)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create JWT token"})
+        return
+    }
+
+    // Respond with the JWT token
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Login successful",
+        "token":   tokenString, // Send the token to the frontend
+		"role": role,
+    })
 }
 
+func authMiddleware(c *gin.Context) {
+	// Get the token from the Authorization header
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+		c.Abort()
+		return
+	}
+
+	// Token is usually prefixed with "Bearer ", so we need to extract the actual token
+	tokenString := authHeader[len("Bearer "):]
+
+	// Parse and validate JWT token
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+		c.Abort()
+		return
+	}
+
+	// Attach user info to context for use in protected routes
+	c.Set("user", claims)
+	c.Next()
+}
 
 func main() {
 	if err := os.MkdirAll("uploads", 0755); err != nil {
@@ -392,6 +425,25 @@ func main() {
 	// Define login route
 	r.POST("/login", loginHandler)
 
+	r.GET("/admin", authMiddleware, func(c *gin.Context) {
+		// Check if the user has an "admin" role
+		user, _ := c.Get("user")
+		claims := user.(jwt.MapClaims)
+		if claims["role"] != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return
+		}
+	
+		// Proceed to the admin panel
+		c.JSON(http.StatusOK, gin.H{"message": "Welcome to the Admin Panel!"})
+	})
+	
+	// Other protected routes
+	r.GET("/userprofile", authMiddleware, func(c *gin.Context) {
+		// User profile logic here
+		c.JSON(http.StatusOK, gin.H{"message": "User Profile"})
+	})
+	
 	r.Static("/uploads", "./uploads")
 
 	// Run the server
