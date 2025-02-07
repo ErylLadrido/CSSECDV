@@ -16,6 +16,10 @@ export default function Navbar({ username, isLoggedIn }: Props) {
         setDropdownOpen(!dropdownOpen);
     };
 
+    const logout = () => {
+        localStorage.removeItem('role')
+        localStorage.removeItem('token')
+    }
 
     return (
         <nav style={{ backgroundColor: "var(--background-color)" }} className="text-white p-4 flex justify-between items-center shadow-md">
@@ -45,7 +49,7 @@ export default function Navbar({ username, isLoggedIn }: Props) {
                                 <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2">
                                     <a href="/UserProfile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">Profile</a>
                                     {/* <a href="/tutorials" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">Tutorials</a> */}
-                                    <a href="/login" onClick={() => {localStorage.removeItem('token')}} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">Logout</a>
+                                    <a href="/login" onClick={logout} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">Logout</a>
                                 </div>
                             )}
                         </div>

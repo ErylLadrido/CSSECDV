@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"time"
+	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -179,10 +180,15 @@ func signUpHandler(c *gin.Context) {
 		return
 	}
 
-	// Initialize role to "user" if not provided
-	if signupData.Role == "" {
+	// Check for a specific email and assign "admin" role if matched
+	if signupData.Email == "admin@admin.com" { // Replace with the desired email
+		signupData.Role = "admin"
+	} else if signupData.Role == "" {
 		signupData.Role = "user"
 	}
+
+	// Log to confirm role is set
+	log.Printf("Role assigned: %s", signupData.Role)
 
 	// Validate the role
 	if signupData.Role != "user" && signupData.Role != "admin" {
@@ -259,6 +265,8 @@ func signUpHandler(c *gin.Context) {
 		"role":          signupData.Role,
 		"profile_photo": profilePhotoPath,
 	})
+
+	log.Printf("Role assigned during signup: %s", signupData.Role)
 }
 
 // func loginHandler(c *gin.Context) {
@@ -320,6 +328,8 @@ func loginHandler(c *gin.Context) {
     )
     query := `SELECT password_hash, salt, role FROM users WHERE email = ?`
     err := db.QueryRow(query, loginData.Email).Scan(&passwordHash, &salt, &role)
+
+	log.Printf("Fetched role for %s: %s", loginData.Email, role)
     if err != nil {
         if err == sql.ErrNoRows {
             c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
@@ -340,6 +350,16 @@ func loginHandler(c *gin.Context) {
         return
     }
 
+	loginData.Email = strings.TrimSpace(loginData.Email)
+	loginData.Email = strings.ToLower(loginData.Email)
+	log.Printf("Logging in with email: %s", loginData.Email)
+	log.Printf("Fetched role for %s: %s", loginData.Email, role)
+
+	// Check if the email is admin@admin.com and set the role to "admin"
+    if loginData.Email == "admin@admin.com" {
+        role = "admin"
+    }
+	
     // Generate a JWT token upon successful login
     claims := jwt.MapClaims{
         "email": loginData.Email,
@@ -360,6 +380,8 @@ func loginHandler(c *gin.Context) {
         "token":   tokenString, // Send the token to the frontend
 		"role": role,
     })
+
+	log.Printf("Role retrieved during login: %s", role)
 }
 
 func authMiddleware(c *gin.Context) {

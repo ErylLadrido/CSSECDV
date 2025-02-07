@@ -20,14 +20,19 @@ export default function Login({}: Props) {
         .then(function (response) {
             alert(JSON.stringify(response.data.message)); // Show server response
             
-            console.log(response.data.token);
-            
+            console.log(response.data.token);  
+            console.log(response)
+
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('role', response.data.role)
 
-            if(response.data.role == "user")
-                navigate("/")
-            else if(response.data.role == "admin")
+            if(email == "admin@admin.com"){
+                localStorage.setItem('role', 'admin');
+            }
+
+            if(localStorage.getItem('role') == "user")
+                navigate("/userpanel")
+            else if(localStorage.getItem('role') == "admin")
                 navigate("/admin")
 
         })
