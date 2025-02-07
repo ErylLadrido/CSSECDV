@@ -1,8 +1,31 @@
 import React from 'react'
+import axios from 'axios'
+import { useState } from 'react'
 
 type Props = {}
 
 export default function Login({}: Props) {
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+
+    const login = (e: React.FormEvent) => {
+        e.preventDefault(); // Prevent page reload
+        axios.post('http://localhost:8080/login', {
+            email: email,
+            password: password
+        })
+        .then(function (response) {
+            alert(JSON.stringify(response.data)); // Show server response
+        })
+        .catch(function (error) {
+            if (error.response) {
+                alert(error.response.data.error); // Show server error message
+            } else {
+                alert(error.message);
+            }
+        });
+    }
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
             <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
@@ -10,7 +33,7 @@ export default function Login({}: Props) {
                 <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Login</h1>
 
                 {/* Form */}
-                <form>
+                <form onSubmit={login}>
                     {/* Email Field */}
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
@@ -21,6 +44,9 @@ export default function Login({}: Props) {
                             id="email"
                             type="email"
                             placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
                         />
                     </div>
 
@@ -34,6 +60,9 @@ export default function Login({}: Props) {
                             id="password"
                             type="password"
                             placeholder="Enter your password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
                         />
                     </div>
 
@@ -60,10 +89,9 @@ export default function Login({}: Props) {
 
                 {/* Footer */}
                 <p className="text-center text-gray-500 text-xs mt-6">
-                &copy; 2025 Jobby. Abenoja - Gonzales - Ladrido
+                    &copy; 2025 Jobby. Abenoja - Gonzales - Ladrido
                 </p>
             </div>
         </div>
-
     )
 }

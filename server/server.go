@@ -41,6 +41,12 @@ type SignupData struct {
 	Role          string                `form:"role"` // New field: role
 }
 
+// LoginData struct for the login request
+type LoginData struct {
+	Email    string `form:"email" binding:"required,email"`
+	Password string `form:"password" binding:"required"`
+}
+
 var validPhoneNumber validator.Func = func(fl validator.FieldLevel) bool {
 	phoneRegex := `^(09|\+639)\d{9}$`
 	re := regexp.MustCompile(phoneRegex)
@@ -253,6 +259,105 @@ func signUpHandler(c *gin.Context) {
 	})
 }
 
+// func loginHandler(c *gin.Context) {
+// 	var loginData LoginData
+
+// 	// Bind the login request data
+// 	if err := c.ShouldBind(&loginData); err != nil {
+// 		c.JSON(http.StatusBadRequest, customValidationErrors(err))
+// 		return
+// 	}
+
+// 	// Fetch the user's salt and password hash from the database
+// 	var (
+// 		passwordHash string
+// 		salt         string
+// 	)
+// 	query := `SELECT password_hash, salt FROM users WHERE email = ?`
+// 	err := db.QueryRow(query, loginData.Email).Scan(&passwordHash, &salt)
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+// 		} else {
+// 			log.Println("Error fetching user from database:", err)
+// 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user data"})
+// 		}
+// 		return
+// 	}
+
+// 	// Hash the inputted password with the retrieved salt
+// 	hashedPassword, err := hashPassword(loginData.Password, salt)
+// 	if err != nil {
+// 		log.Println("Error hashing password:", err)
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+// 		return
+// 	}
+
+// 	// Compare the hashed password with the stored password hash
+// 	if hashedPassword != passwordHash {
+// 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+// 		return
+// 	}
+
+// 	// Login successful
+// 	c.JSON(http.StatusOK, gin.H{
+// 		"message": "Login successful",
+// 	})
+// }
+func loginHandler(c *gin.Context) {
+	var loginData LoginData
+
+	// Bind the login request data
+	if err := c.ShouldBind(&loginData); err != nil {
+		c.JSON(http.StatusBadRequest, customValidationErrors(err))
+		return
+	}
+
+	// Fetch the user's salt and password hash from the database
+	var (
+		passwordHash string
+		salt         string
+	)
+	
+	query := `SELECT password_hash, salt FROM users WHERE email = ?`
+	err := db.QueryRow(query, loginData.Email).Scan(&passwordHash, &salt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// No user found with the provided email
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		} else {
+			// Database error
+			log.Println("Error fetching user from database:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user data"})
+		}
+		return
+	}
+
+	// Concatenate the salt with the provided password
+	passwordWithSalt := salt + loginData.Password
+
+	// Hash the concatenated string (salt + password)
+	hashedPassword, err := hashPassword(passwordWithSalt, salt)
+	if err != nil {
+		log.Println("Error hashing password:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
+	// Compare the newly hashed password with the stored password hash
+	if hashedPassword != passwordHash {
+		// Passwords don't match
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+
+	// Login successful
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+	})
+}
+
+
 func main() {
 	if err := os.MkdirAll("uploads", 0755); err != nil {
 		log.Fatal("Failed to create uploads directory:", err)
@@ -283,7 +388,10 @@ func main() {
 
 	// Define signup route
 	r.POST("/signup", signUpHandler)
-	
+
+	// Define login route
+	r.POST("/login", loginHandler)
+
 	r.Static("/uploads", "./uploads")
 
 	// Run the server
