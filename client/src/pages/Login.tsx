@@ -8,42 +8,45 @@ type Props = {}
 export default function Login({}: Props) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [errorMessage, setErrorMessage] = useState("")
 
     let navigate = useNavigate()
 
     const login = (e: React.FormEvent) => {
         e.preventDefault(); // Prevent page reload
-        axios.post('http://localhost:8080/login', {
-            email: email,
-            password: password
-        })
-        .then(function (response) {
-            alert(JSON.stringify(response.data.message)); // Show server response
+        
+        axios.post('http://localhost:8080/login', {cemail: email, password: password })
+            .then(function (response) {
+                alert(JSON.stringify(response.data.message)); // Show server response
             
-            console.log(response.data.token);  
-            console.log(response)
+                console.log(response.data.token);  
+                console.log(response)
 
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('role', response.data.role)
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('role', response.data.role)
 
-            if(email == "admin@admin.com"){
-                localStorage.setItem('role', 'admin');
-            }
+                if(email == "admin@admin.com"){
+                    localStorage.setItem('role', 'admin');
+                }
 
-            if(localStorage.getItem('role') == "user")
-                navigate("/userpanel")
-            else if(localStorage.getItem('role') == "admin")
-                navigate("/admin")
+                if(localStorage.getItem('role') == "user")
+                    navigate("/userpanel")
+                else if(localStorage.getItem('role') == "admin")
+                    navigate("/admin")
 
-        })
-        .catch(function (error) {
-            if (error.response) {
-                alert(error.response.data.error); // Show server error message
-            } else {
-                alert(error.message);
-            }
-        });
-    }
+                setErrorMessage(""); // Clear error message if Login succeeds
+
+            })
+            .catch(function (error) {
+                if (error.response) {
+                    //alert(error.response.data.error); // Show server error message
+                    setErrorMessage(error.response.data.error || "Invalid email or password");
+                } else {
+                    //alert(error.message);
+                    setErrorMessage("An error occurred. Please try again.");
+                }
+            });
+    };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -84,6 +87,11 @@ export default function Login({}: Props) {
                             required
                         />
                     </div>
+
+                    {/* Error Message */}
+                    <p className="text-red-500 text-xs italic mb-4 min-h-[1rem]">
+                        {errorMessage}
+                    </p>
 
                     {/* Login Button */}
                     <button
