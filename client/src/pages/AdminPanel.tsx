@@ -21,6 +21,16 @@ export default function AdminPanel({}: Props) {
     alert('Export User List functionality to be implemented.');
   };
 
+  const handleEditUser = (email: string) => {
+    // Add logic to edit user
+    alert(`Edit user with email: ${email}`);
+  };
+
+  const handleDeleteUser = (email: string) => {
+    // Add logic to delete user
+    alert(`Delete user with email: ${email}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar username="Admin" isLoggedIn={true} />
@@ -61,8 +71,17 @@ export default function AdminPanel({}: Props) {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-green-600">Active</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <button className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+                <td className="px-6 py-4 whitespace-nowrap flex space-x-2">
+                  <button
+                    onClick={() => handleEditUser('john.doe@example.com')}
+                    className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteUser('john.doe@example.com')}
+                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                  >
                     Delete
                   </button>
                 </td>
@@ -80,8 +99,17 @@ export default function AdminPanel({}: Props) {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-red-600">Inactive</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <button className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+                <td className="px-6 py-4 whitespace-nowrap flex space-x-2">
+                  <button
+                    onClick={() => handleEditUser('jane.doe@example.com')}
+                    className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteUser('jane.doe@example.com')}
+                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                  >
                     Delete
                   </button>
                 </td>
