@@ -12,6 +12,7 @@ export default function Register({}: Props) {
     const [password, setPassword] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
     const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+    const [errorMessage, setErrorMessage] = useState("");
     
     let navigate = useNavigate();
 
@@ -76,39 +77,30 @@ export default function Register({}: Props) {
             // If no error message was set by the above conditions, provide a fallback message
             if (!errorMessage) {
                 errorMessage = "An unexpected error occurred.";
+                setErrorMessage(errorMessage);
             }
     
-            alert(errorMessage);  // Show the error message in the alert box
+            //alert(errorMessage);  // Show the error message in the alert box
+            setErrorMessage(errorMessage);  // Set the error message in the state
         } else {
-            alert("An unexpected error occurred.");
+            //alert("An unexpected error occurred.");
+            setErrorMessage("An unexpected error occurred.");
         }
     } else {
-        alert("An unexpected error occurred.");
+        //alert("An unexpected error occurred.");
+        setErrorMessage("An unexpected error occurred.");
     }
         });
     }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
                 <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Sign Up</h1>
 
                 <form>
                     {/* Name Fields - Two Columns */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="lastName">
-                                Last Name
-                            </label>
-                            <input
-                                className="border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                id="lastName"
-                                type="text"
-                                placeholder="Last Name"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                            />
-                        </div>
                         <div>
                             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="firstName">
                                 First Name
@@ -122,6 +114,21 @@ export default function Register({}: Props) {
                                 onChange={(e) => setFirstname(e.target.value)}
                             />
                         </div>
+                        
+                        <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="lastName">
+                                Last Name
+                            </label>
+                            <input
+                                className="border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                id="lastName"
+                                type="text"
+                                placeholder="Last Name"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                            />
+                        </div>
+                        
                     </div>
 
                     {/* Email Field */}
@@ -182,6 +189,11 @@ export default function Register({}: Props) {
                         />
                     </div>
 
+                    {/* Error Message */}
+                    <p className="text-red-500 text-xs italic mb-4 min-h-[1rem]">
+                        {errorMessage}
+                    </p>
+
                     {/* Sign Up Button */}
                     <button
                         className="w-full text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 transition register-button"
@@ -202,7 +214,7 @@ export default function Register({}: Props) {
                 </form>
 
                 {/* Footer */}
-                <p className="text-center text-gray-500 text-xs mt-6">
+                <p className="text-center text-gray-500 text-xs mt-3">
                     &copy;2025 Jobby. Abenoja - Gonzales - Ladrido
                 </p>
             </div>
