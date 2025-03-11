@@ -8,7 +8,7 @@ type Props = {
   status: string;
 };
 
-export default function UserPanel({}: Props) {
+export default function UserPanel() {
   const [selectedJob, setSelectedJob] = useState<Props | null>(null); // state to store selected job
   const [jobs, setJobs] = useState([
     { title: 'Software Engineer', company: 'Google', location: 'Mountain View, CA', status: 'Applied' },

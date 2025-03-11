@@ -15,7 +15,7 @@ export default function Login({}: Props) {
     const login = (e: React.FormEvent) => {
         e.preventDefault(); // Prevent page reload
         
-        axios.post('http://localhost:8080/login', {cemail: email, password: password })
+        axios.post('http://localhost:8080/login', {email: email, password: password })
             .then(function (response) {
                 alert(JSON.stringify(response.data.message)); // Show server response
             
