@@ -65,19 +65,64 @@ export default function UserPanel() {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     })
-    .then(response => {
-      console.log("Added job:", response.data); 
+    // .then(response => {
+    //   console.log("Added job:", response.data); 
 
-      const addedJob = response.data.job; // Get the job with idjobs from backend
+    //   const addedJob = response.data.job; // Get the job with idjobs from backend
 
-      setJobs([...jobs, addedJob]);
+    //   setJobs([...jobs, addedJob]);
+    //   setIsModalOpen(false);
+    //   setNewJob({ title: '', company: '', location: '', status: 'Applied' }); // Reset form
+    // })
+    .then(() => {
+      console.log("Job added successfully!");
+
+      fetchJobs(); // 🔄 Fetch the latest job list
+
       setIsModalOpen(false);
-      setNewJob({ title: '', company: '', location: '', status: 'Applied' }); // Reset form
+      setNewJob({ title: '', company: '', location: '', status: 'Applied' });
     })
     .catch(error => {
         console.error("Error adding job:", error);
     });
   }
+
+  const fetchJobs = () => {
+    axios.get('http://localhost:8080/userpanel', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    .then(response => {
+      console.log("Fetched jobs:", response.data); 
+
+      if (!response.data?.jobs || !Array.isArray(response.data.jobs)) {
+        console.error("Unexpected response format:", response.data);
+        setJobs([]);
+        return;
+      }
+  
+      const formattedJobs = response.data.jobs.map((job: any) => ({
+        idjobs: job.idjobs,
+        title: job.JobTitle,
+        company: job.JobCompany,
+        location: job.JobLocation,
+        status: job.JobStatus
+      }));
+  
+      setJobs(formattedJobs);
+    })
+    .catch(error => {
+      console.error("Error fetching jobs:", error);
+      setJobs([]);
+    });
+  };
+
+  // Fetch jobs on component mount
+  useEffect(() => {
+      fetchJobs();
+  }, []);
+
 
   // Handle Change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -132,37 +177,6 @@ export default function UserPanel() {
         ) : (
           <p className="text-center p-20 text-gray-500">No jobs added yet. Add one to get started!</p>
         )}
-
-        {/* {jobs.length === 0 ? (
-          <p className="text-center p-20 text-gray-500">No Job Applications Found Here</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full table-auto">
-              <thead>
-                <tr className="bg-gray-100 border-b">
-                  <th className="px-4 py-2 text-left">Job Title</th>
-                  <th className="px-4 py-2 text-left">Company</th>
-                  <th className="px-4 py-2 text-left">Location</th>
-                  <th className="px-4 py-2 text-left">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {jobs.map((job) => (
-                  <tr
-                    key={job.idjobs}
-                    className="cursor-pointer hover:bg-gray-100"
-                    onClick={() => setSelectedJob(job)}
-                  >
-                    <td className="px-6 py-4">{job.title}</td>
-                    <td className="px-6 py-4">{job.company}</td>
-                    <td className="px-6 py-4">{job.location}</td>
-                    <td className="px-6 py-4">{job.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )} */}
       </div>
 
       {/* Add Job Modal */}
