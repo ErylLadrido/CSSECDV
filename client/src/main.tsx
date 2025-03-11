@@ -9,6 +9,7 @@ import Register from './pages/Register.tsx';
 import AdminPanel from './pages/AdminPanel.tsx';
 import UserPanel from './pages/UserPanel.tsx';
 import UserProfile from './pages/UserProfile.tsx';
+import Timeout from './pages/Timeout.tsx'
 import PrivateRoutes from './pages/PrivateRoutes.tsx'
 import { Navigate } from 'react-router';
 
@@ -19,6 +20,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/landing" index element={<Landing />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/timeout" element={<Timeout />} />
             <Route element={<PrivateRoutes />} >
                 <Route path="/admin" element={<AdminPanel />} />
                 <Route path="/userpanel" element={<UserPanel />} />
