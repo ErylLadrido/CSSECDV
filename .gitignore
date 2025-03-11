@@ -25,3 +25,6 @@ dist-ssr
 
 # Ignore .env files
 .env
+
+# Ignore uploads directory
+uploads
