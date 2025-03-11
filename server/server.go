@@ -497,9 +497,31 @@ func addJobHandler(c *gin.Context) {
 }
 
 func getJobsHandler(c *gin.Context) {
+	// Get user ID from context (set by authMiddleware)
+	userClaims, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in token"})
+		return
+	}
+
+	claims, ok := userClaims.(jwt.MapClaims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+		return
+	}
+
+	userIDFloat, ok := claims["idusers"].(float64) // JWT stores numbers as float64
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID in token"})
+		return
+	}
+
+	userID := int(userIDFloat) // Convert to int
+
+
     // Fetch all jobs from the database
-    query := `SELECT idjobs, job_title, job_company, job_location, job_status FROM jobs`
-    rows, err := db.Query(query)
+    query := `SELECT idjobs, job_title, job_company, job_location, job_status FROM jobs WHERE idusers = ?`
+    rows, err := db.Query(query, userID)
     if err != nil {
         log.Println("Error fetching jobs from database:", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch jobs"})

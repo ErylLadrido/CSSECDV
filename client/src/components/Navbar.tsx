@@ -5,11 +5,10 @@ import { APP_NAME } from '../constants'
 import defaultPFP from '../assets/defaultPFP.jpg'
 
 type Props = { 
-    username: string;
     isLoggedIn: boolean;
 }
 
-export default function Navbar({ username, isLoggedIn }: Props) {
+export default function Navbar({ isLoggedIn }: Props) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
   
     const toggleDropdown = () => {
@@ -42,7 +41,7 @@ export default function Navbar({ username, isLoggedIn }: Props) {
                                     className="w-8 h-8 rounded-full"
                                 />
                         
-                                <span>{username}</span>
+                                <span></span>
                             </button>
                 
                             {dropdownOpen && (
