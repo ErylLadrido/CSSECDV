@@ -49,6 +49,15 @@ type LoginData struct {
 	Password string `form:"password" binding:"required"`
 }
 
+// JobData struct for the job request
+type JobData struct {
+	JobTitle    string `form:"jobTitle" binding:"required"`
+	JobCompany 	string `form:"jobCompany" binding:"required"`
+	JobLocation string `form:"jobLocation" binding:"required"`
+	JobStatus 	string `form:"jobStatus" binding:"required"`
+	CreatedAt 	time.Time `form:"createdAt" binding:"required"`
+}
+
 var validPhoneNumber validator.Func = func(fl validator.FieldLevel) bool {
 	phoneRegex := `^(09|\+639)\d{9}$`
 	re := regexp.MustCompile(phoneRegex)
@@ -413,6 +422,11 @@ func authMiddleware(c *gin.Context) {
 	c.Next()
 }
 
+/*********************** JOBS FUNCTION ***********************/
+
+
+
+/*********************** MAIN FUNCTION ***********************/
 func main() {
 	if err := os.MkdirAll("uploads", 0755); err != nil {
 		log.Fatal("Failed to create uploads directory:", err)
@@ -467,6 +481,8 @@ func main() {
 	})
 	
 	r.Static("/uploads", "./uploads")
+
+	/*********************** JOBS ROUTES ***********************/
 
 	// Run the server
 	r.Run(":8080")
