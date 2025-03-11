@@ -37,7 +37,7 @@ export default function Login({}: Props) {
                 // setErrorMessage(""); // Clear error message if Login succeeds
 
                 if (response.data.message === "Login successful") {
-                    setSuccessMessage(true); // ✅ Show modal
+                    setSuccessMessage(true); // Show modal
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('role', response.data.role);
 
@@ -51,7 +51,7 @@ export default function Login({}: Props) {
                             navigate("/userpanel");
                         else if (role === "admin") 
                             navigate("/admin");
-                    }, 2000); // ✅ Redirect after 2 seconds
+                    }, 2000); // Redirect after 2 seconds
                 } else {
                     setErrorMessage("Invalid email or password");
                 }

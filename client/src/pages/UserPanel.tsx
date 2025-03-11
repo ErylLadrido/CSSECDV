@@ -16,6 +16,74 @@ export default function UserPanel() {
   const [newJob, setNewJob] = useState({ title: '', company: '', location: '', status: 'Applied' });
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Fetch jobs on component mount
+  useEffect(() => {
+    axios.get('http://localhost:8080/userpanel', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    .then(response => {
+      console.log("Fetched jobs:", response.data); 
+      // setJobs(response.data?.jobs || []); // If null/undefined, fallback to []
+
+      if (!response.data?.jobs || !Array.isArray(response.data.jobs)) {
+        console.error("Unexpected response format:", response.data);
+        setJobs([]);
+        return;
+      }
+  
+      // Convert backend data to match the frontend structure
+      const formattedJobs = response.data.jobs.map((job: any) => ({
+        idjobs: job.idjobs,
+        title: job.JobTitle,
+        company: job.JobCompany,
+        location: job.JobLocation,
+        status: job.JobStatus
+      }));
+  
+      setJobs(formattedJobs);
+
+    })
+    .catch(error => {
+        console.error("Error fetching jobs:", error);
+        setJobs([]); 
+    });
+  }, []);
+
+  // Handle Add Job
+  const handleAddJob = () => {
+    const formattedJob = {
+      jobTitle: newJob.title,
+      jobCompany: newJob.company,
+      jobLocation: newJob.location,
+      jobStatus: newJob.status
+    };
+
+    axios.post('http://localhost:8080/userpanel', formattedJob, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    .then(response => {
+      console.log("Added job:", response.data); 
+
+      const addedJob = response.data.job; // Get the job with idjobs from backend
+
+      setJobs([...jobs, addedJob]);
+      setIsModalOpen(false);
+      setNewJob({ title: '', company: '', location: '', status: 'Applied' }); // Reset form
+    })
+    .catch(error => {
+        console.error("Error adding job:", error);
+    });
+  }
+
+  // Handle Change
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setNewJob({ ...newJob, [e.target.name]: e.target.value });
+  };
+
   
 
   return (
@@ -34,7 +102,38 @@ export default function UserPanel() {
         </div>
 
         {/* Show message if no jobs */}
-        {jobs.length === 0 ? (
+        {jobs.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full table-auto">
+              <thead>
+                <tr className="bg-gray-100 border-b">
+                  <th className="px-4 py-2 text-left">Job Title</th>
+                  <th className="px-4 py-2 text-left">Company</th>
+                  <th className="px-4 py-2 text-left">Location</th>
+                  <th className="px-4 py-2 text-left">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {jobs.map((job) => (
+                  <tr
+                    key={job.idjobs}
+                    className="cursor-pointer hover:bg-gray-100"
+                    onClick={() => setSelectedJob(job)}
+                  >
+                    <td className="px-6 py-4">{job.title}</td>
+                    <td className="px-6 py-4">{job.company}</td>
+                    <td className="px-6 py-4">{job.location}</td>
+                    <td className="px-6 py-4">{job.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-center p-20 text-gray-500">No jobs added yet. Add one to get started!</p>
+        )}
+
+        {/* {jobs.length === 0 ? (
           <p className="text-center p-20 text-gray-500">No Job Applications Found Here</p>
         ) : (
           <div className="overflow-x-auto">
@@ -63,7 +162,7 @@ export default function UserPanel() {
               </tbody>
             </table>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Add Job Modal */}
@@ -76,7 +175,7 @@ export default function UserPanel() {
               name="title"
               placeholder="Job Title"
               value={newJob.title}
-              // onChange={handleChange}
+              onChange={handleChange}
               className="border p-2 w-full rounded mb-2"
             />
             <input
@@ -84,7 +183,7 @@ export default function UserPanel() {
               name="company"
               placeholder="Company"
               value={newJob.company}
-              // onChange={handleChange}
+              onChange={handleChange}
               className="border p-2 w-full rounded mb-2"
             />
             <input
@@ -92,13 +191,13 @@ export default function UserPanel() {
               name="location"
               placeholder="Location"
               value={newJob.location}
-              // onChange={handleChange}
+              onChange={handleChange}
               className="border p-2 w-full rounded mb-2"
             />
             <select
               name="status"
               value={newJob.status}
-              // onChange={handleChange}
+              onChange={handleChange}
               className="border p-2 w-full rounded mb-4"
             >
               <option value="Applied">Applied</option>
@@ -108,8 +207,7 @@ export default function UserPanel() {
             </select>
             <div className="flex justify-end space-x-4">
               <button className="bg-gray-500 text-white px-4 py-2 rounded" onClick={() => setIsModalOpen(false)}>Cancel</button>
-              {/* <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={handleAddJob}>Add Job</button> */}
-              <button className="bg-blue-500 text-white px-4 py-2 rounded">Add Job</button>
+              <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={handleAddJob}>Add Job</button>
             </div>
           </div>
         </div>
