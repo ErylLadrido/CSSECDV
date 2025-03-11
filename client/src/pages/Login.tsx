@@ -9,6 +9,7 @@ export default function Login({}: Props) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [errorMessage, setErrorMessage] = useState("")
+    const [successMessage, setSuccessMessage] = useState(false)
 
     let navigate = useNavigate()
 
@@ -17,24 +18,43 @@ export default function Login({}: Props) {
         
         axios.post('http://localhost:8080/login', {email: email, password: password })
             .then(function (response) {
-                alert(JSON.stringify(response.data.message)); // Show server response
-            
-                console.log(response.data.token);  
-                console.log(response)
+                // alert(JSON.stringify(response.data.message)); // Show server response
+                // console.log(response.data.token);  
+                // console.log(response)
 
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('role', response.data.role)
+                // localStorage.setItem('token', response.data.token);
+                // localStorage.setItem('role', response.data.role)
 
-                if(email == "admin@admin.com"){
-                    localStorage.setItem('role', 'admin');
+                // if(email == "admin@admin.com"){
+                //     localStorage.setItem('role', 'admin');
+                // }
+
+                // if(localStorage.getItem('role') == "user")
+                //     navigate("/userpanel")
+                // else if(localStorage.getItem('role') == "admin")
+                //     navigate("/admin")
+
+                // setErrorMessage(""); // Clear error message if Login succeeds
+
+                if (response.data.message === "Login successful") {
+                    setSuccessMessage(true); // Show modal
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('role', response.data.role);
+
+                    if (email === "admin@admin.com") {
+                        localStorage.setItem('role', 'admin');
+                    }
+
+                    setTimeout(() => {
+                        const role = localStorage.getItem('role');
+                        if (role === "user") 
+                            navigate("/userpanel");
+                        else if (role === "admin") 
+                            navigate("/admin");
+                    }, 2000); // Redirect after 2 seconds
+                } else {
+                    setErrorMessage("Invalid email or password");
                 }
-
-                if(localStorage.getItem('role') == "user")
-                    navigate("/userpanel")
-                else if(localStorage.getItem('role') == "admin")
-                    navigate("/admin")
-
-                setErrorMessage(""); // Clear error message if Login succeeds
 
             })
             .catch(function (error) {
@@ -119,6 +139,16 @@ export default function Login({}: Props) {
                     &copy; 2025 Jobby. Abenoja - Gonzales - Ladrido
                 </p>
             </div>
+
+            {/* Success Modal (only appears when showSuccess is true) */}
+            {successMessage && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+                        <h2 className="text-2xl font-semibold mb-4">🎉 Login Successful!</h2>
+                        <p className="text-gray-700 mb-4">Redirecting to your dashboard...</p>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

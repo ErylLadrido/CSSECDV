@@ -49,6 +49,15 @@ type LoginData struct {
 	Password string `form:"password" binding:"required"`
 }
 
+// JobData struct for the job request
+type JobData struct {
+	IDJobs	  	int    `json:"idjobs"`
+	JobTitle    string `form:"jobTitle" binding:"required"`
+	JobCompany  string `form:"jobCompany" binding:"required"`
+	JobLocation string `form:"jobLocation" binding:"required"`
+	JobStatus   string `form:"jobStatus" binding:"required"`
+}
+
 var validPhoneNumber validator.Func = func(fl validator.FieldLevel) bool {
 	phoneRegex := `^(09|\+639)\d{9}$`
 	re := regexp.MustCompile(phoneRegex)
@@ -322,12 +331,13 @@ func loginHandler(c *gin.Context) {
 
     // Fetch the user's password hash and salt from the database
     var (
+		userID       int
         passwordHash string
         salt         string
         role         string
     )
-    query := `SELECT password_hash, salt, role FROM users WHERE email = ?`
-    err := db.QueryRow(query, loginData.Email).Scan(&passwordHash, &salt, &role)
+    query := `SELECT idusers, password_hash, salt, role FROM users WHERE email = ?`
+    err := db.QueryRow(query, loginData.Email).Scan(&userID, &passwordHash, &salt, &role)
 
 	log.Printf("Fetched role for %s: %s", loginData.Email, role)
     if err != nil {
@@ -362,6 +372,7 @@ func loginHandler(c *gin.Context) {
 	
     // Generate a JWT token upon successful login
     claims := jwt.MapClaims{
+		"idusers": userID, // Store user ID for access control
         "email": loginData.Email,
         "role":  role, // Store role for access control
         "exp":   time.Now().Add(time.Hour * 24).Unix(), // Token expiration time (24 hours)
@@ -413,6 +424,118 @@ func authMiddleware(c *gin.Context) {
 	c.Next()
 }
 
+/*********************** JOBS FUNCTION ***********************/
+func addJobHandler(c *gin.Context) {
+	var jobData JobData
+
+	if err := c.ShouldBind(&jobData); err != nil {
+		c.JSON(http.StatusBadRequest, customValidationErrors(err))
+		return
+	}
+
+	// Get user ID from context (set by authMiddleware)
+    userClaims, exists := c.Get("user")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in token"})
+        return
+    }
+
+	claims, ok := userClaims.(jwt.MapClaims)
+    if !ok {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+        return
+    }
+
+	userIDFloat, ok := claims["idusers"].(float64) // JWT stores numbers as float64
+    if !ok {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID in token"})
+        return
+    }
+    userID := int(userIDFloat) // Convert to int
+
+	// Insert job into the database (now including user ID)
+    query := `
+        INSERT INTO jobs (idusers, job_title, job_company, job_location, job_status)
+        VALUES (?, ?, ?, ?, ?)
+    `
+
+	log.Println("Executing query:", query)
+    log.Println("Parameters:", userID, jobData.JobTitle, jobData.JobCompany, jobData.JobLocation, jobData.JobStatus)
+
+	res, err := db.Exec(query,
+        userID,                  // Include user ID
+        jobData.JobTitle,
+        jobData.JobCompany,
+        jobData.JobLocation,
+        jobData.JobStatus,
+    )
+    if err != nil {
+        log.Println("Error executing query:", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save job to database"})
+        return
+    }
+
+	// Get the last inserted job ID
+	lastInsertID, err := res.LastInsertId()
+	if err != nil {
+		log.Println("Error fetching last inserted ID:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save job to database"})
+		return
+	}
+
+	// Respond with success message
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Job created successfully",
+		"job": gin.H{
+			"idjobs": lastInsertID,
+			"job_title": jobData.JobTitle,
+			"job_company": jobData.JobCompany,
+			"job_location": jobData.JobLocation,
+			"job_status": jobData.JobStatus,
+		},
+    })
+}
+
+func getJobsHandler(c *gin.Context) {
+    // Fetch all jobs from the database
+    query := `SELECT idjobs, job_title, job_company, job_location, job_status FROM jobs`
+    rows, err := db.Query(query)
+    if err != nil {
+        log.Println("Error fetching jobs from database:", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch jobs"})
+        return
+    }
+    defer rows.Close() // Ensure rows are closed after function exits
+
+    var jobs []JobData
+
+    // Iterate over the rows to fetch all jobs
+    for rows.Next() {
+        var job JobData
+        err := rows.Scan(&job.IDJobs, &job.JobTitle, &job.JobCompany, &job.JobLocation, &job.JobStatus)
+        if err != nil {
+            log.Println("Error scanning job row:", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch jobs"})
+            return
+        }
+        jobs = append(jobs, job)
+    }
+
+    // Check for iteration errors
+    if err := rows.Err(); err != nil {
+        log.Println("Error iterating job rows:", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch jobs"})
+        return
+    }
+
+    // Always return a JSON with an empty "jobs" array if no jobs exist
+    c.JSON(http.StatusOK, gin.H{"jobs": jobs})
+}
+
+
+
+
+/*********************** MAIN FUNCTION ***********************/
 func main() {
 	if err := os.MkdirAll("uploads", 0755); err != nil {
 		log.Fatal("Failed to create uploads directory:", err)
@@ -467,6 +590,16 @@ func main() {
 	})
 	
 	r.Static("/uploads", "./uploads")
+
+	/*********************** JOBS ROUTES ***********************/
+	// r.POST("/userpanel", createJobHandler)
+	// r.GET("/userpanel", getJobsHandler)
+	authorized := r.Group("/userpanel", authMiddleware)
+	{
+		authorized.POST("", addJobHandler)
+		authorized.GET("", getJobsHandler)
+	}
+
 
 	// Run the server
 	r.Run(":8080")
