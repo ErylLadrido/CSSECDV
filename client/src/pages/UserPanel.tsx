@@ -17,6 +17,7 @@ export default function UserPanel() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [updatedJob, setUpdatedJob] = useState<Job | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Fetch jobs on component mount
   useEffect(() => {
@@ -169,7 +170,20 @@ export default function UserPanel() {
     .catch(error => console.error("Error updating job:", error));
   };
 
-  
+  const handleDeleteJob = () => {
+    if (!selectedJob) return;
+
+    axios.delete(`http://localhost:8080/userpanel/deletejob/${selectedJob.idjobs}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    .then(() => {
+      fetchJobs(); // Fetch the latest job list
+      setIsDeleteModalOpen(false);
+    })
+    .catch(error => console.error("Error deleting job:", error));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -225,6 +239,10 @@ export default function UserPanel() {
                         <button
                           className="flex items-center justify-center w-10 h-10 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-all duration-300 ease-in-out"
                           aria-label="Delete Application"
+                          onClick={() => {
+                            setSelectedJob(job);
+                            setIsDeleteModalOpen(true);
+                          }}
                         >
                           🗑️
                         </button>
@@ -289,7 +307,7 @@ export default function UserPanel() {
       )}
 
       {/* Update Job Modal */}
-      {isUpdateModalOpen && (
+      {isUpdateModalOpen && updatedJob && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-2xl font-semibold mb-4">Update Job</h2>
@@ -331,6 +349,20 @@ export default function UserPanel() {
             <div className="flex justify-end space-x-4">
               <button className="bg-gray-500 text-white px-4 py-2 rounded" onClick={() => setIsUpdateModalOpen(false)}>Cancel</button>
               <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={handleUpdateJob}>Update</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Job Modal */}
+      {isDeleteModalOpen && selectedJob && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md text-center">
+            <h2 className="text-xl font-semibold mb-4">Confirm Deletion</h2>
+            <p>Are you sure you want to delete <strong>{selectedJob.title}</strong> at <strong>{selectedJob.company}</strong>?</p>
+            <div className="flex justify-center space-x-4 mt-4">
+              <button className="bg-gray-500 text-white px-4 py-2 rounded" onClick={() => setIsDeleteModalOpen(false)}>Cancel</button>
+              <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={handleDeleteJob}>Delete</button>
             </div>
           </div>
         </div>

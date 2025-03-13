@@ -650,7 +650,25 @@ func updateJobHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Job updated successfully"})
 }
 
+func deleteJobHandler(c *gin.Context) {
+	// Get the job ID from the URL parameter
+	jobID := c.Param("idjobs")
 
+	// Delete the job from the database
+	query := `DELETE FROM jobs WHERE idjobs = ?`
+	log.Println("Executing query:", query)
+	log.Println("Parameters:", jobID)
+
+	_, err := db.Exec(query, jobID)
+	if err != nil {
+		log.Println("Error executing query:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete job"})
+		return
+	}
+
+	// Respond with success message
+	c.JSON(http.StatusOK, gin.H{"message": "Job deleted successfully"})
+}
 
 
 /*********************** MAIN FUNCTION ***********************/
@@ -718,6 +736,7 @@ func main() {
 		authorized.GET("", getJobsHandler)
 		authorized.GET("/profiledata", getProfileHandler)  
 		authorized.PUT("/updatejob/:idjobs", updateJobHandler)
+		authorized.DELETE("/deletejob/:idjobs", deleteJobHandler)
 	}
 
 
