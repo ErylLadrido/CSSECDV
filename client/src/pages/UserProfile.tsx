@@ -32,7 +32,7 @@ export default function UserProfile({}: Props) {
         <div className="min-h-screen flex flex-col bg-gray-100">
             
             {/* Navigation Bar*/}
-            <Navbar username="John Doe" isLoggedIn={true} />
+            <Navbar isLoggedIn={true} />
             
             {/* Main Content */}
             <div className="flex-grow flex items-center justify-center">

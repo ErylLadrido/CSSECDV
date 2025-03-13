@@ -2,6 +2,7 @@ import React from 'react'
 import axios from 'axios'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import SuccessModal from '../components/SuccessModal'
 
 type Props = {}
 
@@ -9,7 +10,7 @@ export default function Login({}: Props) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [errorMessage, setErrorMessage] = useState("")
-    const [successMessage, setSuccessMessage] = useState(false)
+    const [showSuccess, setShowSuccess] = useState(false)
 
     let navigate = useNavigate()
 
@@ -37,10 +38,11 @@ export default function Login({}: Props) {
                 // setErrorMessage(""); // Clear error message if Login succeeds
 
                 if (response.data.message === "Login successful") {
-                    setSuccessMessage(true); // Show modal
+                    setShowSuccess(true);
+
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('role', response.data.role);
-
+                    
                     if (email === "admin@admin.com") {
                         localStorage.setItem('role', 'admin');
                     }
@@ -140,15 +142,8 @@ export default function Login({}: Props) {
                 </p>
             </div>
 
-            {/* Success Modal (only appears when showSuccess is true) */}
-            {successMessage && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-                        <h2 className="text-2xl font-semibold mb-4">🎉 Login Successful!</h2>
-                        <p className="text-gray-700 mb-4">Redirecting to your dashboard...</p>
-                    </div>
-                </div>
-            )}
+            {/* Success Modal */}
+            {showSuccess && <SuccessModal message="Login Successful!" onClose={() => setShowSuccess(false)} />}
         </div>
     )
 }

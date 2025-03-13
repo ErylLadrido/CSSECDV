@@ -2,6 +2,7 @@ import React from 'react'
 import axios from 'axios'
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router';
+import SuccessModal from '../components/SuccessModal';
 
 type Props = {}
 
@@ -13,6 +14,7 @@ export default function Register({}: Props) {
     const [phoneNumber, setPhoneNumber] = useState("");
     const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
     const [errorMessage, setErrorMessage] = useState("");
+    const [showSuccess, setShowSuccess] = useState(false)
     
     let navigate = useNavigate();
 
@@ -47,8 +49,14 @@ export default function Register({}: Props) {
         })
         .then(function (response) {
             console.log(response);
-            alert(response.data.message);
-            navigate("/login")
+            
+            // Show success modal
+            setShowSuccess(true);
+
+            // Delay navigation by 2 seconds
+            setTimeout(() => {
+                navigate("/login");
+            }, 2000);
             
         })
         .catch(function (error) {
@@ -218,7 +226,14 @@ export default function Register({}: Props) {
                     &copy;2025 Jobby. Abenoja - Gonzales - Ladrido
                 </p>
             </div>
-        </div>
 
+            {/* Success Modal */}
+            {showSuccess && (
+                <SuccessModal
+                    message="Account created successfully!"
+                    onClose={() => setShowSuccess(false)}
+                />
+            )}
+        </div>
     )
 }
