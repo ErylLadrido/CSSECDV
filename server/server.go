@@ -613,6 +613,43 @@ func getJobsHandler(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"jobs": jobs})
 }
 
+func updateJobHandler(c *gin.Context) {
+	// Get the job ID from the URL parameter
+	jobID := c.Param("idjobs")
+
+	// Get the job data from the request body
+	var jobData JobData
+	if err := c.ShouldBind(&jobData); err != nil {
+		c.JSON(http.StatusBadRequest, customValidationErrors(err))
+		return
+	}
+
+	// Update the job in the database
+	query := `
+		UPDATE jobs
+		SET job_title = ?, job_company = ?, job_location = ?, job_status = ?
+		WHERE idjobs = ?
+	`
+	log.Println("Executing query:", query)
+	log.Println("Parameters:", jobData.JobTitle, jobData.JobCompany, jobData.JobLocation, jobData.JobStatus, jobID)
+
+	_, err := db.Exec(query,
+		jobData.JobTitle,
+		jobData.JobCompany,
+		jobData.JobLocation,
+		jobData.JobStatus,
+		jobID,
+	)
+	if err != nil {
+		log.Println("Error executing query:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update job"})
+		return
+	}
+
+	// Respond with success message
+	c.JSON(http.StatusOK, gin.H{"message": "Job updated successfully"})
+}
+
 
 
 
@@ -680,6 +717,7 @@ func main() {
 		authorized.POST("", addJobHandler)
 		authorized.GET("", getJobsHandler)
 		authorized.GET("/profiledata", getProfileHandler)  
+		authorized.PUT("/updatejob/:idjobs", updateJobHandler)
 	}
 
 
