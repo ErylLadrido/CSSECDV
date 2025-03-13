@@ -58,6 +58,15 @@ type JobData struct {
 	JobStatus   string `form:"jobStatus" binding:"required"`
 }
 
+// ProfileData struct for the profile response
+type ProfileData struct {
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
+	Email        string `json:"email"`
+	PhoneNumber  string `json:"phone_number"`
+	ProfilePhoto string `json:"profile_photo"`
+}
+
 var validPhoneNumber validator.Func = func(fl validator.FieldLevel) bool {
 	phoneRegex := `^(09|\+639)\d{9}$`
 	re := regexp.MustCompile(phoneRegex)
@@ -424,6 +433,56 @@ func authMiddleware(c *gin.Context) {
 	c.Next()
 }
 
+/*********************** PROFILE FUNCTION ***********************/
+func getProfileHandler(c *gin.Context) {
+	var profileData ProfileData
+
+	// Get user ID from context (set by authMiddleware)
+	userClaims, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found in token"})
+		return
+	}
+
+	claims, ok := userClaims.(jwt.MapClaims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+		return
+	}
+
+	userIDFloat, ok := claims["idusers"].(float64) // JWT stores numbers as float64
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID in token"})
+		return
+	}
+
+	userID := int(userIDFloat) // Convert to int
+
+	// Fetch the user's profile from the database
+	query := `SELECT first_name, last_name, email, phone_number, profile_photo FROM users WHERE idusers = ?`
+	err := db.QueryRow(query, userID).Scan(
+		&profileData.FirstName,
+		&profileData.LastName,
+		&profileData.Email,
+		&profileData.PhoneNumber,
+		&profileData.ProfilePhoto,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// User not found
+			c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
+		} else {
+			log.Println("Error fetching user profile from database:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user profile"})
+		}
+		return
+	}
+
+	// Return the user profile
+	c.JSON(http.StatusOK, gin.H{"profile": profileData})
+}
+
 /*********************** JOBS FUNCTION ***********************/
 func addJobHandler(c *gin.Context) {
 	var jobData JobData
@@ -620,6 +679,7 @@ func main() {
 	{
 		authorized.POST("", addJobHandler)
 		authorized.GET("", getJobsHandler)
+		authorized.GET("/profiledata", getProfileHandler)  
 	}
 
 
