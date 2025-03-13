@@ -8,7 +8,7 @@ export default function Landing({}: Props) {
     return (
         <div className="min-h-screen flex flex-col bg-gray-100">
             {/* Navigation Bar*/}
-            <Navbar username="" isLoggedIn={false} />
+            <Navbar isLoggedIn={false} />
 
             {/* Main Content */}
             <div className="flex-grow flex items-center justify-center">

@@ -9,7 +9,7 @@ import Register from './pages/Register.tsx';
 import AdminPanel from './pages/AdminPanel.tsx';
 import UserPanel from './pages/UserPanel.tsx';
 import UserProfile from './pages/UserProfile.tsx';
-import Timeout from './pages/Timeout.tsx'
+import Timeout from './components/SessionTimeout.tsx'
 import PrivateRoutes from './pages/PrivateRoutes.tsx'
 import { Navigate } from 'react-router';
 
