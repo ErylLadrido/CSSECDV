@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar';
 import defaulPFP from '../assets/defaultPFP.jpg';
 
 type UserProfileProps = {
-    idusers: number;
+    idusers?: number;  // Made optional since API doesn't provide it
     firstName: string;
     lastName: string;
     email: string;
@@ -27,12 +27,11 @@ export default function UserProfile() {
             const profile = response.data.profile;
           
           const formattedProfile = {
-            idusers: profile.idusers,
             firstName: profile.first_name,
             lastName: profile.last_name,
             email: profile.email,
             phoneNumber: profile.phone_number,
-            profilePicture: profile.profile_picture
+            profilePicture: profile.profile_photo
           };
 
           setUserProfile(formattedProfile);
@@ -66,6 +65,18 @@ export default function UserProfile() {
             reader.readAsDataURL(file);
         }
     };
+    
+    // Show loading state until profile data is fetched
+    if (!userProfile) {
+        return <p className="text-center text-gray-500">Loading profile...</p>;
+    }
+    
+    // Ensure correct profile image URL formatting
+    const formattedPhotoURL = userProfile?.profilePicture && userProfile.profilePicture.trim() !== ""
+    ? `http://localhost:8080/${userProfile.profilePicture.replace(/\\\\/g, "/")}` // Double escaping the backslashes
+    : defaulPFP;
+
+    console.log("Profile Picture URL:", formattedPhotoURL);
 
 
     return (
@@ -85,7 +96,7 @@ export default function UserProfile() {
                             <label htmlFor="profile-upload" className="cursor-pointer group relative">
                                 <img 
                                     className="rounded-full w-36 mt-5 border-2 border-gray-300 transition duration-200 pfp-bg-hover" 
-                                    src={userProfile.profilePicture || defaulPFP}
+                                    src={formattedPhotoURL}
                                     alt="Profile" 
                                 />
                                 {/* Change Photo Text */}
@@ -102,7 +113,8 @@ export default function UserProfile() {
                                 className="hidden" 
                                 onChange={handleImageUpload} 
                             />
-                            <h3 className="font-bold mt-3"> <span>{userProfile.firstName} {userProfile.lastName} </span> </h3>
+                            <h3 className="font-bold mt-3">
+                                {userProfile.firstName} {userProfile.lastName} </h3>
                             <p className="text-gray-500">{userProfile.email}</p>
                         </div>
 
