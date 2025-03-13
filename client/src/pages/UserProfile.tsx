@@ -1,10 +1,50 @@
 import React from 'react'
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import Navbar from '../components/Navbar';
-import defaulPFP from '../assets/defaultPFP.jpg'
+import defaulPFP from '../assets/defaultPFP.jpg';
 
-type Props = {}
+type UserProfileProps = {
+    idusers: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    profilePicture: string;
+}
 
-export default function UserProfile({}: Props) {
+export default function UserProfile() {
+    const [userProfile, setUserProfile] = useState<UserProfileProps | null>(null);
+
+    useEffect(() => {
+        axios.get('http://localhost:8080/userpanel/profiledata', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+          console.log("Fetched user profile:", response.data);
+
+          // Extract correct nested structure
+            const profile = response.data.profile;
+          
+          const formattedProfile = {
+            idusers: profile.idusers,
+            firstName: profile.first_name,
+            lastName: profile.last_name,
+            email: profile.email,
+            phoneNumber: profile.phone_number,
+            profilePicture: profile.profile_picture
+          };
+
+          setUserProfile(formattedProfile);
+        })
+        .catch(error => {
+          console.error("Error fetching profile:", error);
+        });
+    }, []);
+    
+    if (!userProfile) {
+    return <p className="text-center text-gray-500">Loading profile...</p>;
+    }
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -45,7 +85,7 @@ export default function UserProfile({}: Props) {
                             <label htmlFor="profile-upload" className="cursor-pointer group relative">
                                 <img 
                                     className="rounded-full w-36 mt-5 border-2 border-gray-300 transition duration-200 pfp-bg-hover" 
-                                    src={defaulPFP}
+                                    src={userProfile.profilePicture || defaulPFP}
                                     alt="Profile" 
                                 />
                                 {/* Change Photo Text */}
@@ -62,18 +102,18 @@ export default function UserProfile({}: Props) {
                                 className="hidden" 
                                 onChange={handleImageUpload} 
                             />
-                            <h3 className="font-bold mt-3">Sample User</h3>
-                            <p className="text-gray-500">sampleuser@mail.com</p>
+                            <h3 className="font-bold mt-3"> <span>{userProfile.firstName} {userProfile.lastName} </span> </h3>
+                            <p className="text-gray-500">{userProfile.email}</p>
                         </div>
 
                         {/* Profile Form */}
                         <div className="w-full md:w-3/4 p-4">
                             <h2 style={{ color: "var(--secondary-color)" }} className="text-xl font-bold mb-4">Profile Settings</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <input type="text" placeholder="Last Name" className="border p-2 rounded w-full" />
-                                <input type="text" placeholder="First Name" className="border p-2 rounded w-full" />
-                                <input type="text" placeholder="Email" className="border p-2 rounded w-full" />              
-                                <input type="text" placeholder="Phone Number" className="border p-2 rounded w-full" />
+                                <input type="text" placeholder={userProfile.lastName} className="border p-2 rounded w-full" />
+                                <input type="text" placeholder={userProfile.firstName} className="border p-2 rounded w-full" />
+                                <input type="text" placeholder={userProfile.email} className="border p-2 rounded w-full" />              
+                                <input type="text" placeholder={userProfile.phoneNumber} className="border p-2 rounded w-full" />
                             </div>
 
                             {/* Buttons Side by Side */}
@@ -89,9 +129,6 @@ export default function UserProfile({}: Props) {
                     </div>
                 </div>
             </div>
-
-
-
         </div>
     )
 }
