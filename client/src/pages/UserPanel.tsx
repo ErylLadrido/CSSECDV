@@ -12,6 +12,8 @@ type Job = {
 
 export default function UserPanel() {
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const jobsPerPage = 10;
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [newJob, setNewJob] = useState({ title: '', company: '', location: '', status: 'Applied' });
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,6 +55,25 @@ export default function UserPanel() {
         setJobs([]); 
     });
   }, []);
+
+  // Calculate the range of jobs to display based on the current page
+  const indexOfLastJob = currentPage * jobsPerPage;
+  const indexOfFirstJob = indexOfLastJob - jobsPerPage;
+  const currentJobs = jobs.slice(indexOfFirstJob, indexOfLastJob);
+
+  // Handle Next Page
+  const nextPage = () => {
+    if (indexOfLastJob < jobs.length) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Handle Previous Page
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   // Handle Add Job
   const handleAddJob = () => {
@@ -202,12 +223,13 @@ export default function UserPanel() {
 
         </div>
 
-        {/* Show message if no jobs */}
+        {/* Job Table */}
         {jobs.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full table-auto border-collapse">
               <thead>
                 <tr className="bg-gray-100 border-b border-gray-300">
+                  <th className="px-6 py-3 text-left font-medium text-gray-700">#</th>
                   <th className="px-6 py-3 text-left font-medium text-gray-700">Job Title</th>
                   <th className="px-6 py-3 text-left font-medium text-gray-700">Company</th>
                   <th className="px-6 py-3 text-left font-medium text-gray-700">Location</th>
@@ -216,12 +238,16 @@ export default function UserPanel() {
                 </tr>
               </thead>
               <tbody>
-                {jobs.map((job) => (
+                {/* {jobs.map((job) => ( */}
+                {currentJobs.map((job, index) => (
                   <tr
                     key={job.idjobs}
                     className="cursor-pointer hover:bg-gray-100 rounded-lg border-b border-gray-200 transition-all duration-200"
                     onClick={() => setSelectedJob(job)}
                   >
+                    <td className="px-6 py-4 text-gray-800">
+                      {(index + 1) + (currentPage - 1) * jobsPerPage}
+                    </td>
                     <td className="px-6 py-4 text-gray-800">{job.title}</td>
                     <td className="px-6 py-4 text-gray-800">{job.company}</td>
                     <td className="px-6 py-4 text-gray-800">{job.location}</td>
@@ -256,6 +282,46 @@ export default function UserPanel() {
         ) : (
           <p className="text-center p-20 text-gray-500">No jobs added yet. Add one to get started!</p>
         )}
+
+        {/* Pagination Controls */}
+        {/* {jobs.length > jobsPerPage && (
+          <div className="flex justify-between mt-4">
+            <button 
+              onClick={prevPage} 
+              disabled={currentPage === 1} 
+              className={`px-4 py-2 bg-gray-300 rounded ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-400'}`}
+            >
+              Previous
+            </button>
+            <span className="px-4 py-2">Page {currentPage} of {Math.ceil(jobs.length / jobsPerPage)}</span>
+            <button 
+              onClick={nextPage} 
+              disabled={indexOfLastJob >= jobs.length} 
+              className={`px-4 py-2 bg-gray-300 rounded ${indexOfLastJob >= jobs.length ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-400'}`}
+            >
+              Next
+            </button>
+          </div>
+        )} */}
+        <div className="flex justify-center items-center mt-4 space-x-2">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className={`px-4 py-2 rounded ${currentPage === 1 ? "bg-gray-300" : "bg-blue-500 text-white hover:bg-blue-600"}`}
+          >
+            Previous
+          </button>
+          <span className="text-gray-700">
+            Page {currentPage} of {Math.ceil(jobs.length / jobsPerPage)}
+          </span>
+          <button
+            disabled={currentPage >= Math.ceil(jobs.length / jobsPerPage)}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+            className={`px-4 py-2 rounded ${currentPage >= Math.ceil(jobs.length / jobsPerPage) ? "bg-gray-300" : "bg-blue-500 text-white hover:bg-blue-600"}`}
+          >
+            Next
+          </button>
+        </div>
       </div>
 
       {/* Add Job Modal */}
