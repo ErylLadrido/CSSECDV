@@ -2,12 +2,16 @@ import React from 'react';
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router';
 
-const SessionTimeout = () => {
+export default function SessionTimeout () {
+
   const navigate = useNavigate();
 
   const handleRedirectToLogin = () => {
+    localStorage.removeItem('token'); // Remove the token
+    localStorage.removeItem('role'); // Remove the role
     navigate('/login'); // Redirect to the login page
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -32,6 +36,4 @@ const SessionTimeout = () => {
       </div>
     </div>
   );
-};
-
-export default SessionTimeout;
+}

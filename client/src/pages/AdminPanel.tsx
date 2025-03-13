@@ -33,7 +33,7 @@ export default function AdminPanel({}: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar username="Admin" isLoggedIn={true} />
+      <Navbar isLoggedIn={true} />
 
       <div className="p-6">
         <div className="flex justify-between items-center mb-4">
