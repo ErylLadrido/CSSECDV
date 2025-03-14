@@ -6,13 +6,20 @@ type Props = {};
 
 export default function AdminPanel({}: Props) {
   useEffect(() => {
+    const token = localStorage.getItem("token"); // Retrieve stored token
+
     axios
-      .get('http://localhost:8080/admin')
-      .then(function (response) {
-        alert(response);
+      .get("http://localhost:8080/admin", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Include token in request
+        },
       })
-      .catch(function (error) {
-        alert(error);
+      .then((response) => {
+        // alert(JSON.stringify(response.data)); // Show API response
+      })
+      .catch((error) => {
+        alert(`Error: ${error.response?.status} - ${error.response?.data?.message}`);
+        console.error("API Error:", error.response);
       });
   }, []);
 
