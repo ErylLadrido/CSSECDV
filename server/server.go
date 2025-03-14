@@ -676,6 +676,52 @@ func deleteJobHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Job deleted successfully"})
 }
 
+/*********************** ADMIN FUNCTION ***********************/
+func getAllUsersHandler(c *gin.Context) {
+	// Check if the user has an "admin" role
+	user, _ := c.Get("user")
+	claims := user.(jwt.MapClaims)
+	if claims["role"] != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+		return
+	}
+
+
+	// Fetch all users from the database
+	query := `SELECT first_name, last_name, email, phone_number, profile_photo FROM users WHERE role = 'user'`
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Println("Error fetching users from database:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		return
+	}
+	defer rows.Close() // Ensure rows are closed after function exits
+
+	var users []ProfileData
+
+	// Iterate over the rows to fetch all users
+	for rows.Next() {
+		var user ProfileData
+		err := rows.Scan(&user.FirstName, &user.LastName, &user.Email, &user.PhoneNumber, &user.ProfilePhoto)
+		if err != nil {
+			log.Println("Error scanning user row:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+			return
+		}
+		users = append(users, user)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating user rows:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		return
+	}
+
+	// Always return a JSON with an empty "users" array if no users exist
+	c.JSON(http.StatusOK, gin.H{"users": users})
+}
+
 
 /*********************** MAIN FUNCTION ***********************/
 func main() {
@@ -734,8 +780,6 @@ func main() {
 	r.Static("/uploads", "./uploads")
 
 	/*********************** JOBS ROUTES ***********************/
-	// r.POST("/userpanel", createJobHandler)
-	// r.GET("/userpanel", getJobsHandler)
 	authorized := r.Group("/userpanel", authMiddleware)
 	{
 		authorized.POST("", addJobHandler)
@@ -745,6 +789,11 @@ func main() {
 		authorized.DELETE("/deletejob/:idjobs", deleteJobHandler)
 	}
 
+	/*********************** ADMIN ROUTES ***********************/
+	admin := r.Group("/adminpanel", authMiddleware)
+	{
+		admin.GET("/users", getAllUsersHandler)
+	}
 
 	// Run the server
 	r.Run(":8080")
