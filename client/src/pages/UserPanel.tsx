@@ -111,7 +111,7 @@ export default function UserPanel() {
     .then(() => {
       console.log("Job added successfully!");
 
-      fetchJobs(); // 🔄 Fetch the latest job list
+      fetchJobs(); // Fetch the latest job list
 
       setIsModalOpen(false);
       setNewJob({ title: '', company: '', location: '', status: 'Applied', expectedSalary: 0 }); // Reset form

@@ -106,6 +106,7 @@ type ProfileData struct {
 	Email        string `json:"email"`
 	PhoneNumber  string `json:"phone_number"`
 	ProfilePhoto string `json:"profile_photo"`
+	IsBlocked	int    `json:"isblocked"`
 }
 
 var validPhoneNumber validator.Func = func(fl validator.FieldLevel) bool {
@@ -756,6 +757,95 @@ func deleteJobHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Job deleted successfully"})
 }
 
+/*********************** ADMIN FUNCTION ***********************/
+func getAllUsersHandler(c *gin.Context) {
+	// Check if the user has an "admin" role
+	user, _ := c.Get("user")
+	claims := user.(jwt.MapClaims)
+	if claims["role"] != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+		return
+	}
+
+
+	// Fetch all users from the database
+	query := `SELECT first_name, last_name, email, phone_number, profile_photo, isblocked FROM users WHERE role = 'user'`
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Println("Error fetching users from database:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		return
+	}
+	defer rows.Close() // Ensure rows are closed after function exits
+
+	var users []ProfileData
+
+	// Iterate over the rows to fetch all users
+	for rows.Next() {
+		var user ProfileData
+		err := rows.Scan(&user.FirstName, &user.LastName, &user.Email, &user.PhoneNumber, &user.ProfilePhoto, &user.IsBlocked)
+		if err != nil {
+			log.Println("Error scanning user row:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+			return
+		}
+		users = append(users, user)
+	}
+
+	// Check for iteration errors
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating user rows:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		return
+	}
+
+	// Always return a JSON with an empty "users" array if no users exist
+	c.JSON(http.StatusOK, gin.H{"users": users})
+}
+
+func blockUserHandler(c *gin.Context) {
+	// Get the user ID from the URL parameter
+	// userID := c.Param("idusers")
+	userEmail := c.Param("email")
+
+	// Block the user in the database
+	query := `UPDATE users SET isblocked = 1 WHERE email = ?`
+	log.Println("Executing query:", query)
+	// log.Println("Parameters:", userID)
+	log.Println("Parameters:", userEmail)
+
+	// _, err := db.Exec(query, userID)
+	// if err != nil {
+	// 	log.Println("Error executing query:", err)
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to block user"})
+	// 	return
+	// }
+
+	_, err := db.Exec(query, userEmail)
+	if err != nil {
+		log.Println("Error executing query:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to block user"})
+		return
+	}
+
+	// Respond with success message
+	c.JSON(http.StatusOK, gin.H{"message": "User blocked successfully"})
+}
+
+func unblockUserHandler(c *gin.Context) {
+    userEmail := c.Param("email")
+
+    query := `UPDATE users SET isblocked = 0 WHERE email = ?`
+    _, err := db.Exec(query, userEmail)
+    if err != nil {
+        log.Println("Error executing query:", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unblock user"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "User unblocked successfully"})
+}
+
 
 /*********************** MAIN FUNCTION ***********************/
 func main() {
@@ -837,6 +927,14 @@ func main() {
 		authorized.GET("/profiledata", getProfileHandler)  
 		authorized.PUT("/updatejob/:idjobs", updateJobHandler)
 		authorized.DELETE("/deletejob/:idjobs", deleteJobHandler)
+	}
+
+	/*********************** ADMIN ROUTES ***********************/
+	admin := r.Group("/adminpanel", authMiddleware)
+	{
+		admin.GET("/users", getAllUsersHandler)
+		admin.PUT("/blockuser/:email", blockUserHandler)
+		admin.PUT("/unblockuser/:email", unblockUserHandler)
 	}
 
 	// Run the server
