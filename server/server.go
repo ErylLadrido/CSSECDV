@@ -56,6 +56,7 @@ type JobData struct {
 	JobCompany  string `form:"jobCompany" binding:"required"`
 	JobLocation string `form:"jobLocation" binding:"required"`
 	JobStatus   string `form:"jobStatus" binding:"required"`
+	JobExpectedSalary int `form:"expectedSalary" binding:"required"`
 }
 
 // ProfileData struct for the profile response
@@ -514,12 +515,12 @@ func addJobHandler(c *gin.Context) {
 
 	// Insert job into the database (now including user ID)
     query := `
-        INSERT INTO jobs (idusers, job_title, job_company, job_location, job_status)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO jobs (idusers, job_title, job_company, job_location, job_status, expected_salary)
+        VALUES (?, ?, ?, ?, ?, ?)
     `
 
 	log.Println("Executing query:", query)
-    log.Println("Parameters:", userID, jobData.JobTitle, jobData.JobCompany, jobData.JobLocation, jobData.JobStatus)
+    log.Println("Parameters:", userID, jobData.JobTitle, jobData.JobCompany, jobData.JobLocation, jobData.JobStatus, jobData.JobExpectedSalary)
 
 	res, err := db.Exec(query,
         userID,                  // Include user ID
@@ -527,6 +528,7 @@ func addJobHandler(c *gin.Context) {
         jobData.JobCompany,
         jobData.JobLocation,
         jobData.JobStatus,
+		jobData.JobExpectedSalary,
     )
     if err != nil {
         log.Println("Error executing query:", err)
@@ -551,6 +553,7 @@ func addJobHandler(c *gin.Context) {
 			"job_company": jobData.JobCompany,
 			"job_location": jobData.JobLocation,
 			"job_status": jobData.JobStatus,
+			"expected_salary": jobData.JobExpectedSalary,
 		},
     })
 }
@@ -579,7 +582,7 @@ func getJobsHandler(c *gin.Context) {
 
 
     // Fetch all jobs from the database
-    query := `SELECT idjobs, job_title, job_company, job_location, job_status FROM jobs WHERE idusers = ?`
+    query := `SELECT idjobs, job_title, job_company, job_location, job_status, expected_salary FROM jobs WHERE idusers = ?`
     rows, err := db.Query(query, userID)
     if err != nil {
         log.Println("Error fetching jobs from database:", err)
@@ -593,7 +596,7 @@ func getJobsHandler(c *gin.Context) {
     // Iterate over the rows to fetch all jobs
     for rows.Next() {
         var job JobData
-        err := rows.Scan(&job.IDJobs, &job.JobTitle, &job.JobCompany, &job.JobLocation, &job.JobStatus)
+        err := rows.Scan(&job.IDJobs, &job.JobTitle, &job.JobCompany, &job.JobLocation, &job.JobStatus, &job.JobExpectedSalary)
         if err != nil {
             log.Println("Error scanning job row:", err)
             c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch jobs"})
@@ -617,6 +620,8 @@ func updateJobHandler(c *gin.Context) {
 	// Get the job ID from the URL parameter
 	jobID := c.Param("idjobs")
 
+	log.Print("Job ID: ", jobID)
+
 	// Get the job data from the request body
 	var jobData JobData
 	if err := c.ShouldBind(&jobData); err != nil {
@@ -627,17 +632,18 @@ func updateJobHandler(c *gin.Context) {
 	// Update the job in the database
 	query := `
 		UPDATE jobs
-		SET job_title = ?, job_company = ?, job_location = ?, job_status = ?
+		SET job_title = ?, job_company = ?, job_location = ?, job_status = ?, expected_salary = ?
 		WHERE idjobs = ?
 	`
 	log.Println("Executing query:", query)
-	log.Println("Parameters:", jobData.JobTitle, jobData.JobCompany, jobData.JobLocation, jobData.JobStatus, jobID)
+	log.Println("Parameters:", jobData.JobTitle, jobData.JobCompany, jobData.JobLocation, jobData.JobStatus, jobData.JobExpectedSalary, jobID)
 
 	_, err := db.Exec(query,
 		jobData.JobTitle,
 		jobData.JobCompany,
 		jobData.JobLocation,
 		jobData.JobStatus,
+		jobData.JobExpectedSalary,
 		jobID,
 	)
 	if err != nil {

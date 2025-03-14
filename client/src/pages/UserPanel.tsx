@@ -8,6 +8,7 @@ type Job = {
   company: string;
   location: string;
   status: string;
+  expectedSalary: number;
 };
 
 export default function UserPanel() {
@@ -15,7 +16,7 @@ export default function UserPanel() {
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 10;
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [newJob, setNewJob] = useState({ title: '', company: '', location: '', status: 'Applied' });
+  const [newJob, setNewJob] = useState({ title: '', company: '', location: '', status: 'Applied', expectedSalary: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [updatedJob, setUpdatedJob] = useState<Job | null>(null);
@@ -44,7 +45,8 @@ export default function UserPanel() {
         title: job.JobTitle,
         company: job.JobCompany,
         location: job.JobLocation,
-        status: job.JobStatus
+        status: job.JobStatus,
+        expectedSalary: job.JobExpectedSalary
       }));
   
       setJobs(formattedJobs);
@@ -81,7 +83,8 @@ export default function UserPanel() {
       jobTitle: newJob.title,
       jobCompany: newJob.company,
       jobLocation: newJob.location,
-      jobStatus: newJob.status
+      jobStatus: newJob.status,
+      jobExpectedSalary: newJob.expectedSalary
     };
 
     axios.post('http://localhost:8080/userpanel', formattedJob, {
@@ -104,7 +107,7 @@ export default function UserPanel() {
       fetchJobs(); // 🔄 Fetch the latest job list
 
       setIsModalOpen(false);
-      setNewJob({ title: '', company: '', location: '', status: 'Applied' });
+      setNewJob({ title: '', company: '', location: '', status: 'Applied', expectedSalary: 0 }); // Reset form
     })
     .catch(error => {
         console.error("Error adding job:", error);
@@ -131,7 +134,8 @@ export default function UserPanel() {
         title: job.JobTitle,
         company: job.JobCompany,
         location: job.JobLocation,
-        status: job.JobStatus
+        status: job.JobStatus,
+        expectedSalary: job.JobExpectedSalary
       }));
   
       setJobs(formattedJobs);
@@ -160,7 +164,8 @@ export default function UserPanel() {
       title: job.title, 
       company: job.company, 
       location: job.location, 
-      status: job.status 
+      status: job.status,
+      expectedSalary: job.expectedSalary
     });
     setIsUpdateModalOpen(true);
   };
@@ -173,7 +178,8 @@ export default function UserPanel() {
       jobTitle: updatedJob.title,
       jobCompany: updatedJob.company,
       jobLocation: updatedJob.location,
-      jobStatus: updatedJob.status
+      jobStatus: updatedJob.status,
+      jobExpectedSalary: updatedJob.expectedSalary
     };
 
     axios.put(`http://localhost:8080/userpanel/updatejob/${updatedJob.idjobs}`, formattedJob, {
@@ -233,6 +239,7 @@ export default function UserPanel() {
                   <th className="px-6 py-3 text-left font-medium text-gray-700">Job Title</th>
                   <th className="px-6 py-3 text-left font-medium text-gray-700">Company</th>
                   <th className="px-6 py-3 text-left font-medium text-gray-700">Location</th>
+                  <th className="px-6 py-3 text-left font-medium text-gray-700">Expected Salary</th>
                   <th className="px-6 py-3 text-left font-medium text-gray-700">Status</th>
                   <th className="px-6 py-3 text-right font-medium text-gray-700">Actions</th>
                 </tr>
@@ -251,6 +258,7 @@ export default function UserPanel() {
                     <td className="px-6 py-4 text-gray-800">{job.title}</td>
                     <td className="px-6 py-4 text-gray-800">{job.company}</td>
                     <td className="px-6 py-4 text-gray-800">{job.location}</td>
+                    <td className="px-6 py-4 text-gray-800">{job.expectedSalary}</td>
                     <td className="px-6 py-4 text-gray-800">{job.status}</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end space-x-2">
@@ -353,6 +361,14 @@ export default function UserPanel() {
               onChange={handleChange}
               className="border p-2 w-full rounded mb-2"
             />
+            <input
+              type="number"
+              name="expectedSalary"
+              placeholder="Expected Salary"
+              value={newJob.expectedSalary}
+              onChange={handleChange}
+              className="border p-2 w-full rounded mb-2"
+            />
             <select
               name="status"
               value={newJob.status}
@@ -399,6 +415,14 @@ export default function UserPanel() {
               placeholder="Location"
               value={updatedJob?.location || ""}
               onChange={(e) => setUpdatedJob(prev => prev ? { ...prev, location: e.target.value } : null)}
+              className="border p-2 w-full rounded mb-2"
+            />
+            <input
+              type="number"
+              name="expectedSalary"
+              placeholder="Expected Salary"
+              value={updatedJob?.expectedSalary || 0}
+              onChange={(e) => setUpdatedJob(prev => prev ? { ...prev, expectedSalary: parseInt(e.target.value) } : null)}
               className="border p-2 w-full rounded mb-2"
             />
             <select
