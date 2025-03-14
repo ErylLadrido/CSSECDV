@@ -15,19 +15,59 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/image/webp" // Add WebP support
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/RackSec/srslog"
+	"strconv"
+	"io"
 )
+
+// SyslogMiddleware logs messages to syslog
+func SyslogMiddleware(syslogWriter *srslog.Writer) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		method := c.Request.Method
+		url := c.Request.URL.String()
+		clientIP := c.ClientIP()
+
+		// Process request
+		c.Next()
+
+		statusCode := c.Writer.Status()
+		duration := time.Since(start)
+
+		syslogWriter.Info("[" + start.Format(time.RFC3339) + "] " + method + " " + url + " - " + strconv.Itoa(statusCode) + " (" + duration.String() + ") from " + clientIP)
+	}
+}
+
+// FileLoggingMiddleware logs messages to a file
+func FileLoggingMiddleware(logFile *os.File) gin.HandlerFunc {
+	logger := log.New(logFile, "", log.LstdFlags)
+	return func(c *gin.Context) {
+		start := time.Now()
+		method := c.Request.Method
+		url := c.Request.URL.String()
+		clientIP := c.ClientIP()
+
+		// Process request
+		c.Next()
+
+		statusCode := c.Writer.Status()
+		duration := time.Since(start)
+
+		logger.Printf("[%s] %s %s - %d (%s) from %s", start.Format(time.RFC3339), method, url, statusCode, duration, clientIP)
+	}
+}
 
 // Global validator instance
 var validate *validator.Validate
@@ -73,6 +113,46 @@ var validPhoneNumber validator.Func = func(fl validator.FieldLevel) bool {
 	re := regexp.MustCompile(phoneRegex)
 	return re.MatchString(fl.Field().String())
 }
+
+// SetupSyslog initializes syslog logging
+func SetupSyslog() (*srslog.Writer, error) {
+	syslogWriter, err := srslog.Dial("udp", "172.28.202.42:514", srslog.LOG_INFO, "go-gin-app")
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("Successfully connected to syslog!")
+	return syslogWriter, nil
+}
+
+// SetupFileLogging initializes file logging
+func SetupFileLogging() (*os.File, error) {
+	logFile, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
+	}
+	return logFile, nil
+}
+
+func setupLogging() (io.Writer, error) {
+	logFile, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open log file: %v", err)
+	}
+
+	syslogWriter, err := srslog.Dial("udp", "172.28.202.42:514", srslog.LOG_INFO, "go-gin-app")
+	if err != nil {
+		logFile.Close()
+		log.Printf("Failed to connect to syslog: %v", err)
+		return nil, fmt.Errorf("failed to dial syslog: %v", err)
+	}
+
+	log.Println("Successfully connected to syslog server!")
+
+	multiWriter := io.MultiWriter(logFile, syslogWriter)
+	return multiWriter, nil
+}
+
 
 // Custom error handler for validation errors
 func customValidationErrors(err error) gin.H {
@@ -277,7 +357,7 @@ func signUpHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save user to database"})
 		return
 	}
-
+		
 	// Respond with success message
 	c.JSON(http.StatusOK, gin.H{
 		"message":       "Signup successful",
@@ -687,8 +767,24 @@ func main() {
 	initDB()
 	defer db.Close()
 
+	syslogWriter, err := SetupSyslog()
+	if err != nil {
+		log.Fatalf("Failed to set up syslog: %v", err)
+	}
+	defer syslogWriter.Close()
+
+	logFile, err := SetupFileLogging()
+	if err != nil {
+		log.Fatalf("Failed to set up file logging: %v", err)
+	}
+	defer logFile.Close()
+
 	// Initialize Gin router
 	r := gin.Default()
+
+	// Use the SyslogMiddleware with the multiWriter
+	r.Use(SyslogMiddleware(syslogWriter))
+	r.Use(FileLoggingMiddleware(logFile))
 
 	// Initialize the global validator
 	validate = validator.New()
@@ -734,8 +830,6 @@ func main() {
 	r.Static("/uploads", "./uploads")
 
 	/*********************** JOBS ROUTES ***********************/
-	// r.POST("/userpanel", createJobHandler)
-	// r.GET("/userpanel", getJobsHandler)
 	authorized := r.Group("/userpanel", authMiddleware)
 	{
 		authorized.POST("", addJobHandler)
@@ -744,7 +838,6 @@ func main() {
 		authorized.PUT("/updatejob/:idjobs", updateJobHandler)
 		authorized.DELETE("/deletejob/:idjobs", deleteJobHandler)
 	}
-
 
 	// Run the server
 	r.Run(":8080")

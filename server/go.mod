@@ -3,6 +3,7 @@ module cssecdv/jobby
 go 1.23.5
 
 require (
+	github.com/RackSec/srslog v0.0.0-20180709174129-a4725f04ec91
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.23.0
