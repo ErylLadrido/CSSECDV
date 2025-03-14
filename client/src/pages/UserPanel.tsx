@@ -79,17 +79,24 @@ export default function UserPanel() {
 
   // Handle Add Job
   const handleAddJob = () => {
-    const formattedJob = {
-      jobTitle: newJob.title,
-      jobCompany: newJob.company,
-      jobLocation: newJob.location,
-      jobStatus: newJob.status,
-      jobExpectedSalary: newJob.expectedSalary
-    };
+    // const formattedJob = {
+    //   jobTitle: newJob.title,
+    //   jobCompany: newJob.company,
+    //   jobLocation: newJob.location,
+    //   jobStatus: newJob.status,
+    //   jobExpectedSalary: newJob.expectedSalary
+    // };
+    const formData = new URLSearchParams();
+    formData.append("jobTitle", newJob.title);
+    formData.append("jobCompany", newJob.company);
+    formData.append("jobLocation", newJob.location);
+    formData.append("jobStatus", newJob.status);
+    formData.append("expectedSalary", newJob.expectedSalary.toString());
 
-    axios.post('http://localhost:8080/userpanel', formattedJob, {
+    axios.post('http://localhost:8080/userpanel', formData, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/x-www-form-urlencoded",
       }
     })
     // .then(response => {
