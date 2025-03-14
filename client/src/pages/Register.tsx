@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router';
 import SuccessModal from '../components/SuccessModal';
 
+import { emailSchema, imageSchema, nameSchema, passwordSchema, phoneSchema } from '../models/userInput';
+import FormInput from '../components/FormInput';
+import ImageInput from '../components/ImageInput';
+
 type Props = {}
 
 export default function Register({}: Props) {
@@ -18,12 +22,6 @@ export default function Register({}: Props) {
     
     let navigate = useNavigate();
 
-    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if(event.target.files){
-            setProfilePhoto(event.target.files[0])
-        }
-    }
-    
     const signUp = () => {
         const formData = new FormData();
     
@@ -104,96 +102,64 @@ export default function Register({}: Props) {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-                <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Sign Up</h1>
+                <h1 className="text-5xl font-bold text-center text-gray-800 mb-6">Sign Up</h1>
 
                 <form>
                     {/* Name Fields - Two Columns */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="firstName">
-                                First Name
-                            </label>
-                            <input
-                                className="border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                id="firstName"
-                                type="text"
-                                placeholder="First Name"
-                                value={firstName}
-                                onChange={(e) => setFirstname(e.target.value)}
-                            />
-                        </div>
+                        <FormInput
+                            name='First Name'
+                            type='text'
+                            schema={nameSchema}
+                            setValue={setFirstname}
+                        />
                         
-                        <div>
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="lastName">
-                                Last Name
-                            </label>
-                            <input
-                                className="border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                id="lastName"
-                                type="text"
-                                placeholder="Last Name"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                            />
-                        </div>
+                        <FormInput
+                            name='Last Name'
+                            type='text'
+                            schema={nameSchema}
+                            setValue={setLastName}
+                        />
                         
                     </div>
 
                     {/* Email Field */}
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-                            Email
-                        </label>
-                        <input
-                            className="border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            id="email"
-                            type="email"
-                            placeholder="Email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                        <FormInput
+                            name='Email'
+                            type='text'
+                            schema={emailSchema}
+                            setValue={setEmail}
                         />
                     </div>
 
                     {/* Password Field */}
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-                            Password
-                        </label>
-                        <input
-                            className="border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            id="password"
-                            type="password"
-                            placeholder="Password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                        <FormInput
+                            name='Password'
+                            type='password'
+                            schema={passwordSchema}
+                            setValue={setPassword}
                         />
                     </div>
 
                     {/* Phone Number */}
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phoneNumber">
-                            Phone Number
-                        </label>
-                        <input
-                            className="border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            id="phoneNumber"
-                            type="tel"
-                            placeholder="Phone Number"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
+                        <FormInput
+                            name='Phone Number'
+                            type='text'
+                            schema={phoneSchema}
+                            setValue={setPhoneNumber}
                         />
                     </div>
 
                     {/* Profile Photo Upload */}
                     <div className="mb-6">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="profilePhoto">
-                            Profile Photo
-                        </label>
-                        <input
-                            className="border rounded w-full py-2 px-3 text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-white file:bg-blue-500 hover:file:bg-blue-700 cursor-pointer"
-                            id="profilePhoto"
-                            type="file"
-                            onChange={handleImageChange}
+                        <ImageInput
+                            type='file'
+                            name='Profile Picture'
+                            schema={imageSchema}
+                            setValue={setProfilePhoto}
                         />
                     </div>
 
