@@ -1,18 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import axios from 'axios';
+import ConfirmActionModal from '../components/ConfirmActionModal';
+import { set } from 'zod';
 
 type User = {
   first_name: string;
   last_name: string;
   email: string;
   phone_number: string;
+  isblocked: number;
 };
 
 export default function AdminPanel() {
   const [users, setUsers] = useState<User[]>([]);
   const [currentAdminPage, setCurrentAdminPage] = useState(1);
   const usersPerPage = 50;
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showBlockModal, setShowBlockModal] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token"); // Retrieve stored token
@@ -20,10 +25,11 @@ export default function AdminPanel() {
     axios
       .get("http://localhost:8080/adminpanel/users", {
         headers: {
-          Authorization: `Bearer ${token}`, // Include token in request
+          Authorization: `Bearer ${token}`, // token in request
         },
       })
       .then((response) => {
+        console.log("API Response Users:", response.data.users);
         setUsers(response.data.users);
       })
       .catch((error) => {
@@ -36,13 +42,55 @@ export default function AdminPanel() {
     alert('Export User List functionality to be implemented.');
   };
 
-  const handleEditUser = (email: string) => {
-    alert(`Edit user with email: ${email}`);
+  const handleBlockUser = (email: string) => {
+    if (!selectedUser) {
+      // alert('User not found.');
+      return;
+    }
+
+    const token = localStorage.getItem("token"); // Retrieve stored token
+
+    axios.put(`http://localhost:8080/adminpanel/blockuser/${email}`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    .then((response) => {
+      // alert(`User with email ${email} has been blocked.`);
+      // setUsers((prevUsers) => prevUsers.filter((user) => user.email !== email));
+      setSelectedUser(null);
+      setShowBlockModal(false);
+    })
+    .catch((error) => {
+      alert(`Error: ${error.response?.status} - ${error.response?.data?.message}`);
+      console.error("API Error:", error.response);
+    });
   };
 
-  const handleDeleteUser = (email: string) => {
-    alert(`Delete user with email: ${email}`);
+  const handleToggleBlock = (email: string, isBlocked: number) => {
+    const newStatus = isBlocked === 1 ? 0 : 1; // Toggle status
+    const action = newStatus === 1 ? "blockuser" : "unblockuser";
+
+    axios
+      .put(`http://localhost:8080/adminpanel/${action}/${email}`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+      .then(() => {
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.email === email ? { ...user, isblocked: newStatus } : user
+          )
+        );
+      })
+      .catch((error) => {
+        console.error("Error updating user status:", error);
+      });
   };
+
+
+  // const handleDeleteUser = (email: string) => {
+  //   alert(`Delete user with email: ${email}`);
+  // };
 
   // Corrected Pagination Logic
   const indexOfLastUser = currentAdminPage * usersPerPage;
@@ -103,22 +151,26 @@ export default function AdminPanel() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{user.first_name}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-green-600">Active</div>
+                    <td className={`px-6 py-4 ${user.isblocked ? "text-orange-600 font-semibold" : "text-green-600"}`}>
+                      {user.isblocked ? "Blocked" : "Active"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap flex space-x-2">
-                      <button
-                        onClick={() => handleEditUser(user.email)}
-                        className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
-                      >
-                        Edit
-                      </button>
-                      <button
+                    <button
+                      onClick={() => handleToggleBlock(user.email, user.isblocked)}
+                      className={`px-4 py-2 rounded ${
+                        user.isblocked
+                          ? "bg-blue-500 text-white hover:bg-blue-600"
+                          : "bg-orange-500 text-white hover:bg-red-600"
+                      }`}
+                    >
+                      {user.isblocked ? "Unblock" : "Block"}
+                    </button>
+                      {/* <button
                         onClick={() => handleDeleteUser(user.email)}
                         className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
                       >
-                        Delete
-                      </button>
+                        🗑️ Delete
+                      </button> */}
                     </td>
                   </tr>
                 ))
@@ -153,6 +205,14 @@ export default function AdminPanel() {
             Next
           </button>
         </div>
+
+        {selectedUser && showBlockModal && (
+          <ConfirmActionModal
+            message={`Are you sure you want to block user with email: ${selectedUser.email}?`}
+            onClose={() => setSelectedUser(null)}
+            onConfirm={() => handleBlockUser(selectedUser.email)}
+          />
+        )}
       </div>
     </div>
   );
